@@ -1,0 +1,42 @@
+{
+  "version": "1.0",
+  "last_updated": "2026-10-01T23:13:49.987499",
+  "files": [
+    {
+      "id": "f001",
+      "name": "Setupstag200Easy 0.37.4.12596",
+      "filename": "SetupStag200Easy-0.37.4.12596.exe",
+      "description": "",
+      "keywords": [
+        "setupstag200easy",
+        "0.37.4.12596"
+      ],
+      "source_url": "",
+      "local_path": "",
+      "telegram_file_id": null,
+      "size_bytes": 70374976,
+      "downloaded": false,
+      "category": "software",
+      "note": ""
+    },
+    {
+      "id": "f002",
+      "name": "Setupstag200Easy 0.37.4.12596",
+      "filename": "SetupStag200Easy-0.37.4.12596.exe",
+      "description": "Файл установки программы настройки для Stag200 GoFast  версия 37.4",
+      "keywords": [
+        "Stag200",
+        "программа Stag",
+        "Stag programma",
+        "37.4"
+      ],
+      "source_url": "",
+      "local_path": "",
+      "telegram_file_id": null,
+      "size_bytes": 70374976,
+      "downloaded": false,
+      "category": "software",
+      "note": ""
+    }
+  ]
+}
