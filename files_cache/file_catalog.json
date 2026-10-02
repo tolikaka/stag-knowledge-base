@@ -1,26 +1,7 @@
 {
   "version": "1.0",
-  "last_updated": "2026-10-02T22:39:24.256769",
+  "last_updated": "2026-10-02T23:21:41.527423",
   "files": [
-    {
-      "id": "f002",
-      "name": "Setupstag200Easy 0.37.4.12596",
-      "filename": "SetupStag200Easy-0.37.4.12596.exe",
-      "description": "Файл установки программы настройки для Stag200 GoFast  версия 37.4",
-      "keywords": [
-        "Stag200",
-        "программа Stag",
-        "Stag programma",
-        "37.4"
-      ],
-      "source_url": "",
-      "local_path": "",
-      "telegram_file_id": null,
-      "size_bytes": 70374976,
-      "downloaded": false,
-      "category": "software",
-      "note": ""
-    },
     {
       "id": "f003",
       "name": "ADAX 5.0.8.5 setup uztronic",
@@ -33,10 +14,10 @@
         "uztronic"
       ],
       "source_url": "",
-      "local_path": "",
+      "local_path": "files_cache/ADAX-5.0.8.5-setup_uztronic.exe",
       "telegram_file_id": null,
-      "size_bytes": 0,
-      "downloaded": false,
+      "size_bytes": 31342892,
+      "downloaded": true,
       "category": "software",
       "note": ""
     },
@@ -53,10 +34,10 @@
         "8.12"
       ],
       "source_url": "",
-      "local_path": "",
+      "local_path": "files_cache/Adax_setup_3.6.74-beta-8.12-10-26.exe",
       "telegram_file_id": null,
-      "size_bytes": 0,
-      "downloaded": false,
+      "size_bytes": 72876712,
+      "downloaded": true,
       "category": "software",
       "note": ""
     },
@@ -71,10 +52,10 @@
         "5.0.8.7"
       ],
       "source_url": "",
-      "local_path": "",
+      "local_path": "files_cache/NEVO-SKY-5.0.8.7.exe",
       "telegram_file_id": null,
-      "size_bytes": 0,
-      "downloaded": false,
+      "size_bytes": 13866568,
+      "downloaded": true,
       "category": "software",
       "note": ""
     },
@@ -88,10 +69,10 @@
         "1.0"
       ],
       "source_url": "",
-      "local_path": "",
+      "local_path": "files_cache/SetupAcAfr_1.0.exe",
       "telegram_file_id": null,
-      "size_bytes": 0,
-      "downloaded": false,
+      "size_bytes": 56697628,
+      "downloaded": true,
       "category": "software",
       "note": ""
     },
@@ -106,10 +87,10 @@
         "light"
       ],
       "source_url": "",
-      "local_path": "",
+      "local_path": "files_cache/SetupAcStag-0.64.2.12703_Light.exe",
       "telegram_file_id": null,
-      "size_bytes": 0,
-      "downloaded": false,
+      "size_bytes": 50884756,
+      "downloaded": true,
       "category": "software",
       "note": ""
     },
@@ -123,10 +104,10 @@
         "0.63.8.12660"
       ],
       "source_url": "",
-      "local_path": "",
+      "local_path": "files_cache/SetupAcStagExtended-0.63.8.12660.exe",
       "telegram_file_id": null,
-      "size_bytes": 0,
-      "downloaded": false,
+      "size_bytes": 48332942,
+      "downloaded": true,
       "category": "software",
       "note": ""
     },
@@ -140,10 +121,10 @@
         "0.38.6.12915"
       ],
       "source_url": "",
-      "local_path": "",
+      "local_path": "files_cache/SetupEasyFirst-0.38.6.12915.exe",
       "telegram_file_id": null,
-      "size_bytes": 0,
-      "downloaded": false,
+      "size_bytes": 51835489,
+      "downloaded": true,
       "category": "software",
       "note": ""
     },
@@ -157,10 +138,10 @@
         "0.38.6.12915"
       ],
       "source_url": "",
-      "local_path": "",
+      "local_path": "files_cache/SetupStag200Easy-0.38.6.12915.exe",
       "telegram_file_id": null,
-      "size_bytes": 0,
-      "downloaded": false,
+      "size_bytes": 70716099,
+      "downloaded": true,
       "category": "software",
       "note": ""
     },
@@ -174,10 +155,10 @@
         "0.38.7.12960"
       ],
       "source_url": "",
-      "local_path": "",
+      "local_path": "files_cache/SetupStag200Easy-0.38.7.12960.exe",
       "telegram_file_id": null,
-      "size_bytes": 0,
-      "downloaded": false,
+      "size_bytes": 70680710,
+      "downloaded": true,
       "category": "software",
       "note": ""
     },
@@ -191,10 +172,10 @@
         "0.36.6.12471"
       ],
       "source_url": "",
-      "local_path": "",
+      "local_path": "files_cache/SetupStag200Easy_0.36.6.12471.exe",
       "telegram_file_id": null,
-      "size_bytes": 0,
-      "downloaded": false,
+      "size_bytes": 68865449,
+      "downloaded": true,
       "category": "software",
       "note": ""
     },
@@ -210,10 +191,10 @@
         "stag500"
       ],
       "source_url": "",
-      "local_path": "",
+      "local_path": "files_cache/История изменения версий - Stag500_RU.docx",
       "telegram_file_id": null,
-      "size_bytes": 0,
-      "downloaded": false,
+      "size_bytes": 103376,
+      "downloaded": true,
       "category": "manual",
       "note": ""
     },
