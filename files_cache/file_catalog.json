@@ -1,24 +1,7 @@
 {
   "version": "1.0",
-  "last_updated": "2026-10-01T23:13:49.987499",
+  "last_updated": "2026-10-02T22:39:24.256769",
   "files": [
-    {
-      "id": "f001",
-      "name": "Setupstag200Easy 0.37.4.12596",
-      "filename": "SetupStag200Easy-0.37.4.12596.exe",
-      "description": "",
-      "keywords": [
-        "setupstag200easy",
-        "0.37.4.12596"
-      ],
-      "source_url": "",
-      "local_path": "",
-      "telegram_file_id": null,
-      "size_bytes": 70374976,
-      "downloaded": false,
-      "category": "software",
-      "note": ""
-    },
     {
       "id": "f002",
       "name": "Setupstag200Easy 0.37.4.12596",
@@ -35,6 +18,223 @@
       "telegram_file_id": null,
       "size_bytes": 70374976,
       "downloaded": false,
+      "category": "software",
+      "note": ""
+    },
+    {
+      "id": "f003",
+      "name": "ADAX 5.0.8.5 setup uztronic",
+      "filename": "ADAX-5.0.8.5-setup_uztronic.exe",
+      "description": "Автоимпорт из files_cache/",
+      "keywords": [
+        "adax",
+        "5.0.8.5",
+        "setup",
+        "uztronic"
+      ],
+      "source_url": "",
+      "local_path": "",
+      "telegram_file_id": null,
+      "size_bytes": 0,
+      "downloaded": false,
+      "category": "software",
+      "note": ""
+    },
+    {
+      "id": "f004",
+      "name": "Adax setup 3.6.74 beta 8.12 10 26",
+      "filename": "Adax_setup_3.6.74-beta-8.12-10-26.exe",
+      "description": "Автоимпорт из files_cache/",
+      "keywords": [
+        "adax",
+        "setup",
+        "3.6.74",
+        "beta",
+        "8.12"
+      ],
+      "source_url": "",
+      "local_path": "",
+      "telegram_file_id": null,
+      "size_bytes": 0,
+      "downloaded": false,
+      "category": "software",
+      "note": ""
+    },
+    {
+      "id": "f005",
+      "name": "NEVO SKY 5.0.8.7",
+      "filename": "NEVO-SKY-5.0.8.7.exe",
+      "description": "Автоимпорт из files_cache/",
+      "keywords": [
+        "nevo",
+        "sky",
+        "5.0.8.7"
+      ],
+      "source_url": "",
+      "local_path": "",
+      "telegram_file_id": null,
+      "size_bytes": 0,
+      "downloaded": false,
+      "category": "software",
+      "note": ""
+    },
+    {
+      "id": "f006",
+      "name": "SetupAcAfr 1.0",
+      "filename": "SetupAcAfr_1.0.exe",
+      "description": "Автоимпорт из files_cache/",
+      "keywords": [
+        "setupacafr",
+        "1.0"
+      ],
+      "source_url": "",
+      "local_path": "",
+      "telegram_file_id": null,
+      "size_bytes": 0,
+      "downloaded": false,
+      "category": "software",
+      "note": ""
+    },
+    {
+      "id": "f007",
+      "name": "SetupAcStag 0.64.2.12703 Light",
+      "filename": "SetupAcStag-0.64.2.12703_Light.exe",
+      "description": "Автоимпорт из files_cache/",
+      "keywords": [
+        "setupacstag",
+        "0.64.2.12703",
+        "light"
+      ],
+      "source_url": "",
+      "local_path": "",
+      "telegram_file_id": null,
+      "size_bytes": 0,
+      "downloaded": false,
+      "category": "software",
+      "note": ""
+    },
+    {
+      "id": "f008",
+      "name": "SetupAcStagExtended 0.63.8.12660",
+      "filename": "SetupAcStagExtended-0.63.8.12660.exe",
+      "description": "Автоимпорт из files_cache/",
+      "keywords": [
+        "setupacstagextended",
+        "0.63.8.12660"
+      ],
+      "source_url": "",
+      "local_path": "",
+      "telegram_file_id": null,
+      "size_bytes": 0,
+      "downloaded": false,
+      "category": "software",
+      "note": ""
+    },
+    {
+      "id": "f009",
+      "name": "SetupEasyFirst 0.38.6.12915",
+      "filename": "SetupEasyFirst-0.38.6.12915.exe",
+      "description": "Автоимпорт из files_cache/",
+      "keywords": [
+        "setupeasyfirst",
+        "0.38.6.12915"
+      ],
+      "source_url": "",
+      "local_path": "",
+      "telegram_file_id": null,
+      "size_bytes": 0,
+      "downloaded": false,
+      "category": "software",
+      "note": ""
+    },
+    {
+      "id": "f010",
+      "name": "SetupStag200Easy 0.38.6.12915",
+      "filename": "SetupStag200Easy-0.38.6.12915.exe",
+      "description": "Автоимпорт из files_cache/",
+      "keywords": [
+        "setupstag200easy",
+        "0.38.6.12915"
+      ],
+      "source_url": "",
+      "local_path": "",
+      "telegram_file_id": null,
+      "size_bytes": 0,
+      "downloaded": false,
+      "category": "software",
+      "note": ""
+    },
+    {
+      "id": "f011",
+      "name": "SetupStag200Easy 0.38.7.12960",
+      "filename": "SetupStag200Easy-0.38.7.12960.exe",
+      "description": "Автоимпорт из files_cache/",
+      "keywords": [
+        "setupstag200easy",
+        "0.38.7.12960"
+      ],
+      "source_url": "",
+      "local_path": "",
+      "telegram_file_id": null,
+      "size_bytes": 0,
+      "downloaded": false,
+      "category": "software",
+      "note": ""
+    },
+    {
+      "id": "f012",
+      "name": "SetupStag200Easy 0.36.6.12471",
+      "filename": "SetupStag200Easy_0.36.6.12471.exe",
+      "description": "Автоимпорт из files_cache/",
+      "keywords": [
+        "setupstag200easy",
+        "0.36.6.12471"
+      ],
+      "source_url": "",
+      "local_path": "",
+      "telegram_file_id": null,
+      "size_bytes": 0,
+      "downloaded": false,
+      "category": "software",
+      "note": ""
+    },
+    {
+      "id": "f013",
+      "name": "История изменения версий Stag500 RU",
+      "filename": "История изменения версий - Stag500_RU.docx",
+      "description": "Автоимпорт из files_cache/",
+      "keywords": [
+        "история",
+        "изменения",
+        "версий",
+        "stag500"
+      ],
+      "source_url": "",
+      "local_path": "",
+      "telegram_file_id": null,
+      "size_bytes": 0,
+      "downloaded": false,
+      "category": "manual",
+      "note": ""
+    },
+    {
+      "id": "f014",
+      "name": "Расчет газовых форсунок Lpg Cng v61",
+      "filename": "Расчет газовых форсунок Lpg Cng v61.exe",
+      "description": "Автоимпорт из files_cache/",
+      "keywords": [
+        "расчет",
+        "газовых",
+        "форсунок",
+        "lpg",
+        "cng",
+        "v61"
+      ],
+      "source_url": "",
+      "local_path": "files_cache/Расчет газовых форсунок Lpg Cng v61.exe",
+      "telegram_file_id": null,
+      "size_bytes": 10306172,
+      "downloaded": true,
       "category": "software",
       "note": ""
     }
