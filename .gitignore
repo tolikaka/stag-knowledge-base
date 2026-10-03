@@ -1,0 +1,38 @@
+# Секреты — никогда не в репозитории
+config.py
+bot_session.session
+*.session
+
+# Логи
+*.log
+ai_diag_uz.log
+stag_bot.log
+
+# Python кэш
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Бинарные файлы в files_cache
+files_cache/*.exe
+files_cache/*.zip
+files_cache/*.rar
+files_cache/*.7z
+files_cache/*.msi
+files_cache/*.iso
+files_cache/*.bin
+files_cache/*.hex
+files_cache/*.fw
+
+# НО file_catalog.json в git — это метаданные, не бинарник
+!files_cache/file_catalog.json
+
+# Временные файлы
+*.tmp
+*.temp
+.deps_installed
+
+# IDE
+.vscode/
+.idea/
