@@ -1,3 +1,11 @@
+# FILE: main.py | VERSION: 1.1.0 | DATE: 2026-10-04
+"""
+main.py — Точка запуска AI_Diag_UZ Bot
+========================================
+Авторизация Telethon выполняется в auth_telethon.py (до запуска main.py).
+main.py только проверяет статус сессии и запускает бота.
+"""
+
 import asyncio
 import logging
 import os
@@ -5,12 +13,11 @@ import sys
 import subprocess
 import threading
 
-BASE_DIR  = os.path.dirname(os.path.abspath(__file__))
-ADMIN_DIR = os.path.join(BASE_DIR, "admin")
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 
-for p in [ADMIN_DIR, BASE_DIR]:
-    if p not in sys.path:
-        sys.path.insert(0, p)
+# Только корень в sys.path — все .py файлы в корне C:\stag_bot\
+if BASE_DIR not in sys.path:
+    sys.path.insert(0, BASE_DIR)
 
 logging.basicConfig(
     format="%(asctime)s | %(levelname)s | %(name)s | %(message)s",
@@ -33,6 +40,7 @@ logger = logging.getLogger(__name__)
 
 
 def install_package(package: str, import_name: str = None) -> bool:
+    """Устанавливает пакет если отсутствует."""
     name = import_name or package.split("==")[0].split(">=")[0]
     try:
         __import__(name)
@@ -59,8 +67,10 @@ def install_package(package: str, import_name: str = None) -> bool:
 
 
 def check_dependencies():
+    """Проверяет и устанавливает обязательные зависимости."""
     logger.info("  Проверка зависимостей...")
 
+    # Обязательные
     for pkg, imp in [("aiohttp", None), ("Pillow", "PIL")]:
         try:
             __import__(imp or pkg)
@@ -68,7 +78,7 @@ def check_dependencies():
         except ImportError:
             install_package(pkg, imp)
 
-    # Telethon — устанавливаем если задан API_ID
+    # Telethon — только установка если нужен, авторизация в auth_telethon.py
     try:
         from config import TG_API_ID, TG_API_HASH
         if TG_API_ID and TG_API_HASH:
@@ -77,21 +87,22 @@ def check_dependencies():
                 logger.info("  telethon %s: OK", telethon.__version__)
             except ImportError:
                 install_package("telethon")
-            # Статус сессии
+
+            # Только статус — никакой авторизации здесь
             session = os.path.join(BASE_DIR, "bot_session.session")
             if os.path.exists(session):
                 logger.info("  Telethon: сессия найдена")
             else:
                 logger.warning(
-                    "  Telethon: сессия не найдена.\n"
-                    "  Скачивание файлов > 20MB недоступно.\n"
-                    "  Перезапустите start.bat для авторизации."
+                    "  Telethon: сессия не найдена — "
+                    "скачивание файлов > 20MB недоступно"
                 )
     except (ImportError, AttributeError):
         logger.info("  Telethon: TG_API_ID не задан")
 
 
 def run_admin_in_thread():
+    """Запускает Flask веб-панель в отдельном потоке."""
     try:
         from admin import run_admin
         logger.info("  Web-panel: http://localhost:8080")
@@ -111,9 +122,11 @@ def main():
     except ImportError:
         logger.warning("  config.py не найден!")
 
+    # Создаём папки для данных
     for subdir in ["knowledge_base", "files_cache"]:
         os.makedirs(os.path.join(BASE_DIR, subdir), exist_ok=True)
 
+    # Создаём file_catalog.json если нет
     import json
     catalog_path = os.path.join(BASE_DIR, "files_cache", "file_catalog.json")
     if not os.path.exists(catalog_path):
@@ -122,14 +135,19 @@ def main():
                 {"version": "1.0", "last_updated": "", "files": []},
                 f, ensure_ascii=False, indent=2
             )
+        logger.info("  file_catalog.json: создан")
 
+    # Зависимости
     check_dependencies()
 
+    # Создаём чистый event loop для бота
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
 
+    # Flask в отдельном потоке
     threading.Thread(target=run_admin_in_thread, daemon=True).start()
 
+    # Запуск бота
     logger.info("  Запускаем бота...")
     from bot import main as bot_main
     bot_main()

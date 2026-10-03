@@ -14,12 +14,15 @@ echo   Stop: Ctrl+C
 echo ============================================================
 echo.
 
-REM Check if Telethon auth is needed
-python -c "import os,sys;sys.path.insert(0,r'%~dp0');f=open(r'%~dp0config.py');t=f.read();f.close();sys.exit(0 if 'TG_API_ID' not in t or '= 0' in t else (0 if os.path.exists(r'%~dp0bot_session.session') else 1))" >nul 2>&1
+REM Run auth_telethon.py every time.
+REM If session is valid - exits in 1-2 sec without questions.
+REM If session missing or broken - runs interactive auth.
+python auth_telethon.py
 if errorlevel 1 (
-    echo Telethon auth required...
     echo.
-    python auth_telethon.py
+    echo WARNING: Telethon auth incomplete.
+    echo Files larger than 20MB cannot be downloaded automatically.
+    echo Run start.bat again to retry authorization.
     echo.
 )
 
