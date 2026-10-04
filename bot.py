@@ -1,4 +1,4 @@
-# FILE: bot.py | VERSION: 1.1.0 | DATE: 2026-10-04
+# FILE: bot.py | VERSION: 1.2.1 | DATE: 2026-10-04
 # ==============================================================================
 #  bot.py  —  Главный файл Telegram-бота AI_Diag_UZ («Уста»)
 # ==============================================================================
@@ -257,227 +257,133 @@ def extract_question(text: str) -> str:
 
 def detect_language(text: str) -> str:
     """
-    Определяет язык и шрифт текста сообщения.
+    Определяет язык текста сообщения.
 
-    Аргументы:
-        text (str): текст сообщения
+    Возвращает один из кодов:
+        'ru'           — русский
+        'uz_cyrillic'  — узбекский кириллица
+        'uz_latin'     — узбекский латиница
+        'ru_translit'  — русский транслитом
+        'en'           — английский
+        'uk'           — украинский
+        'be'           — белорусский
+        'de'           — немецкий
+        'kk'           — казахский (кириллица или латиница)
+        'ky'           — киргизский
+        'tg'           — таджикский
+        'tk'           — туркменский
 
-    Возвращает одну из строк:
-        'ru'           — русский язык, кириллица
-        'uz_cyrillic'  — узбекский язык, кириллица
-        'uz_latin'     — узбекский язык, латиница
-        'ru_translit'  — русский язык, латиница-транслит
+    ПОРЯДОК ВАЖЕН: более специфичные проверки идут раньше общих.
     """
-    # Шаг 1: Проверяем специфические узбекские буквы кириллицы
-    # Эти буквы (ў қ ғ ҳ) встречаются ТОЛЬКО в узбекском кирилле, не в русском
-    has_uz_cyrillic = bool(re.search(r"[ўқғҳ]", text, re.UNICODE))
-    if has_uz_cyrillic:
+    # ── Кириллица: специфические буквы ───────────────────────────────────────
+
+    # Казахский: ә ң ү ұ ө һ і — проверяем ДО узбекского
+    # т.к. қ есть в обоих языках
+    if re.search(r"[әңүұөһі]", text, re.UNICODE):
+        return "kk"
+
+    # Узбекский кириллица: ў ғ ҳ қ
+    if re.search(r"[ўғҳқ]", text, re.UNICODE):
         return "uz_cyrillic"
 
-    # Расширенный список узбекских слов написанных общей кириллицей (без ўқғҳ).
-    # Включает бытовые, технические и вопросительные слова узбекского языка.
-    uz_cyrillic_markers = bool(re.search(
-        r"\b(савол|нима|нега|қандай|қаерда|қачон|хат[оа]|ишламай|"
-        r"машина|двигатель|босим|ёрдам|мумкин|бўлади|"
-        # Часто используемые узбекские слова без специальных букв:
-        r"шуни|бунинг|менга|сизга|керак|дастур|программаси|"
-        r"ишлаяпти|ишламаяпти|очилмаяпти|кутиб|турибман|"
-        r"уларнинг|мана|ана|ким|нарса|кетди|келди|"
-        # Технические термины на узбекском:
-        r"хатоси|хатолик|юклаш|юкла|созлаш|уланиш|улан)\b",
-        text,
-        re.IGNORECASE | re.UNICODE,
-    ))
-    if uz_cyrillic_markers:
+    # Таджикский: ӣ ӯ ҷ
+    if re.search(r"[ӣӯҷ]", text, re.UNICODE):
+        return "tg"
+    if re.search(
+        r"\b(ман|шумо|чӣ|чаро|куҷо|кӯмак|хатои|маъно|дорад)\b",
+        text, re.IGNORECASE | re.UNICODE
+    ):
+        return "tg"
+
+    # Украинский: і ї є ґ
+    if re.search(r"[іїєґ]", text, re.UNICODE):
+        return "uk"
+    if re.search(
+        r"\b(що|як|де|коли|чому|помилка|означає)\b",
+        text, re.IGNORECASE | re.UNICODE
+    ):
+        return "uk"
+
+    # Белорусский маркеры
+    if re.search(
+        r"\b(што|азначае|дзе|калі|чаму|памылка)\b",
+        text, re.IGNORECASE | re.UNICODE
+    ):
+        return "be"
+
+    # Киргизский маркеры (кириллица без спецбукв)
+    if re.search(
+        r"\b(эмнени|билдирет|каталыгы|каталык|кантип|"
+        r"жардам|иштебейт|эмне|кайда|качан)\b",
+        text, re.IGNORECASE | re.UNICODE
+    ):
+        return "ky"
+
+    # Узбекский кириллица маркеры (общая кириллица без спецбукв)
+    if re.search(
+        r"\b(хатоси|нимани|англатади|савол|нима|нега|"
+        r"ишламай|хатолик|юклаш|мумкин|керак|"
+        r"ишлаяпти|ишламаяпти|менга|сизга)\b",
+        text, re.IGNORECASE | re.UNICODE
+    ):
         return "uz_cyrillic"
 
-    # Дополнительная проверка: характерные узбекские суффиксы
-    # -аси/-яси (притяжательный), -нинг (родительный), -дан/-га/-да (падежи)
-    # Если в тексте НЕСКОЛЬКО слов с такими суффиксами — это узбекский
-    uz_suffix_matches = re.findall(
-        r"\w+(?:аси|яси|нинг|ларни|ларга|ларда|дан\b|\bга\b)",
-        text, re.UNICODE
-    )
-    if len(uz_suffix_matches) >= 1:
-        return "uz_cyrillic"
-
-    # Шаг 2: Проверяем наличие любой кириллицы (русские буквы а-я А-Я)
-    has_cyrillic = bool(re.search(r"[а-яёА-ЯЁ]", text, re.UNICODE))
-    if has_cyrillic:
-        # Есть кириллица, но нет узбекских букв → это русский
+    # Любая кириллица → русский
+    if re.search(r"[а-яёА-ЯЁ]", text, re.UNICODE):
         return "ru"
 
-    # Шаг 3: Нет кириллицы совсем — текст на латинице.
-    # По правилам группы сначала предполагаем узбекский язык, но отдельно
-    # проверяем характерные признаки русского транслита.
-    # Ищем характерные узбекские слова (маркеры узбекского языка)
-    uz_latin_markers = bool(re.search(
-        r"\b(bu|va|emas|bor|nima|qanday|nega|qayerda|qachon|"
-        r"muammo|ishlamay|xato|dastur|sozlash|bosim|temperatura|"
-        r"gaz|dvigatel|yoqilmaydi|ishlamaydi|qancha|yuklab)\b",
-        text,
-        re.IGNORECASE,
-    ))
-    # \b — граница слова, чтобы не ловить части других слов
-    # | — ИЛИ (любое из перечисленных слов)
+    # ── Латиница ──────────────────────────────────────────────────────────────
 
-    if uz_latin_markers:
+    # Туркменский: ý ň ž — ДО немецкого (ä/ö/ü частично общие)
+    if re.search(r"[ýňžÝŇŽ]", text, re.UNICODE):
+        return "tk"
+    if re.search(
+        r"\b(näme|nädip|nirede|haçan|ýalňyşlygy|aňladýar|kömek)\b",
+        text, re.IGNORECASE
+    ):
+        return "tk"
+
+    # Немецкий: ä ö ü ß
+    if re.search(r"[äöüßÄÖÜ]", text, re.UNICODE):
+        return "de"
+    if re.search(
+        r"\b(warum|wie|wo|wann|hilfe|fehler|was|bedeutet|funktioniert)\b",
+        text, re.IGNORECASE
+    ):
+        return "de"
+
+    # Казахский латиница
+    if re.search(
+        r"\b(qalai|qayda|qachon|qate|júkteu|bağdarlama)\b",
+        text, re.IGNORECASE
+    ):
+        return "kk"
+
+    # Английский
+    if re.search(
+        r"\b(what|why|how|where|when|help|error|does|mean|"
+        r"not\s+working|download|please|thanks|thank)\b",
+        text, re.IGNORECASE
+    ):
+        return "en"
+
+    # Узбекский латиница
+    if re.search(
+        r"\b(nima|qanday|nega|xato|nimani|anglatadi|"
+        r"xatosi|ishlamay|qayerda|qachon)\b",
+        text, re.IGNORECASE
+    ):
         return "uz_latin"
 
-    ru_translit_markers = bool(re.search(
-        r"\b(pochemu|kak|kakoy|kakaya|chto|gde|mozhno|nuzhno|"
-        r"mashina|oshibka|rabotaet|ne\s+rabotaet|proverit|pomogite)\b",
-        text,
-        re.IGNORECASE,
-    ))
-    if ru_translit_markers:
+    # Русский транслит
+    if re.search(
+        r"\b(pochemu|kak|chto|gde|oshibka|rabotaet|pomogite)\b",
+        text, re.IGNORECASE
+    ):
         return "ru_translit"
 
-    # Неопределённая латиница: базовое предположение — узбекский (lotin).
+    # По умолчанию — узбекский латиница
     return "uz_latin"
-
-
-# ==============================================================================
-#  ИНСТРУКЦИИ ДЛЯ AI ПО ЯЗЫКУ ОТВЕТА
-#
-#  Эти строки добавляются к системному промпту Claude AI,
-#  чтобы он отвечал на нужном языке и шрифте.
-# ==============================================================================
-LANG_INSTRUCTION: dict[str, str] = {
-    "ru": (
-        "Отвечай ТОЛЬКО на русском языке, кириллицей. "
-        "Не используй латиницу в ответе."
-    ),
-    "uz_cyrillic": (
-        "Фақат ўзбек тилида жавоб бер, кирилл ёзувида. "
-        "Рус тилидан фойдаланма."
-        # Перевод: "Отвечай только на узбекском, кириллицей. Не используй русский."
-    ),
-    "uz_latin": (
-        "Faqat o'zbek tilida javob ber, lotin yozuvida. "
-        "Rus tilidan foydalanma."
-        # Перевод: "Отвечай только на узбекском, латиницей. Не используй русский."
-    ),
-    "ru_translit": (
-        "Вопрос написан русским транслитом (латиницей). "
-        "Отвечай на русском языке. "
-        "Если вопрос написан латиницей-транслитом — ответ тоже дай латиницей-транслитом."
-    ),
-}
-
-
-# ==============================================================================
-#  УТОЧНЯЮЩИЕ ВОПРОСЫ
-#
-#  Если пользователь написал слишком коротко или непонятно,
-#  бот задаёт уточняющий вопрос на том же языке.
-#  Например: "Уста, помогите!" — непонятно с чем помочь.
-# ==============================================================================
-CLARIFY_MSG: dict[str, str] = {
-    "ru": (
-        "🤔 Пожалуйста, уточните вопрос:\n\n"
-        "• *Автомобиль:* марка, модель, год, двигатель\n"
-        "• *Система:* двигатель, АКПП, ABS, ГБО и т.д.\n"
-        "• *Что происходит:* симптомы и условия появления\n"
-        "• *Диагностика:* код неисправности, сканер и измеренные параметры\n\n"
-        "Пример: _Уста, Chevrolet Cobalt 2022, P0171, коррекция +25%, "
-        "нестабильный холостой ход_"
-    ),
-    "uz_cyrillic": (
-        "🤔 Илтимос, саволни аниқлаштиринг:\n\n"
-        "• *Автомобил:* марка, модел, йил, двигатель\n"
-        "• *Тизим:* двигатель, АКПП, ABS, ГБО ва ҳ.к.\n"
-        "• *Белгилар:* нима бўлмоқда ва қачон\n"
-        "• *Диагностика:* хато коди ва ўлчанган параметрлар"
-    ),
-    "uz_latin": (
-        "🤔 Iltimos, savolni aniqlashtiring:\n\n"
-        "• *Avtomobil:* marka, model, yil, dvigatel\n"
-        "• *Tizim:* dvigatel, AKPP, ABS, GBO va h.k.\n"
-        "• *Belgilar:* nima bo'lyapti va qachon\n"
-        "• *Diagnostika:* xato kodi va o'lchangan parametrlar"
-    ),
-    "ru_translit": (
-        "🤔 Pozhaluysta, utochnite vopros:\n\n"
-        "• *Avtomobil:* marka, model, god, dvigatel\n"
-        "• *Sistema:* dvigatel, AKPP, ABS, GBO i t.d.\n"
-        "• *Simptomy:* chto proisxodit i kogda\n"
-        "• *Diagnostika:* kod oshibki i izmerennye parametry"
-    ),
-}
-
-LISTEN_MSG: dict[str, str] = {
-    "ru": (
-        "Да, я Вас слушаю. Задайте вопрос и, по возможности, укажите марку, "
-        "модель, год, двигатель, систему и код неисправности. Повторно писать "
-        "«Уста» не нужно."
-    ),
-    "uz_cyrillic": (
-        "Ҳа, эшитаман. Саволингизни ёзинг. Имкон бўлса автомобил маркаси, "
-        "модели, йили, двигатели, тизими ва хато кодини кўрсатинг. «Уста» деб "
-        "қайта ёзиш шарт эмас."
-    ),
-    "uz_latin": (
-        "Ha, eshitaman. Savolingizni yozing. Imkon bo'lsa avtomobil markasi, "
-        "modeli, yili, dvigateli, tizimi va xato kodini ko'rsating. «Usta» deb "
-        "qayta yozish shart emas."
-    ),
-    "ru_translit": (
-        "Da, ya Vas slushayu. Zadayte vopros i ukazhite marku, model, god, "
-        "dvigatel, sistemu i kod oshibki. Povtorno pisat Usta ne nuzhno."
-    ),
-}
-
-UNAVAILABLE_MSG: dict[str, str] = {
-    "ru": (
-        "⏳ *Ответ по данному вопросу сейчас недоступен.*\n\n"
-        "Возможные причины:\n"
-        "• Вопрос не содержит достаточно данных для точного ответа\n"
-        "• Информация по данной теме отсутствует в базе знаний\n"
-        "• Временная недоступность внешних источников\n\n"
-        "Вопрос сохранён и поставлен в очередь на обработку.\n"
-        "База знаний постоянно пополняется.\n"
-        "Пожалуйста, обратитесь повторно через 24 часа\n"
-        "или уточните вопрос: укажите марку/модель авто, год, код ошибки."
-    ),
-    "uz_cyrillic": (
-        "⏳ *Ушбу савол бўйича жавоб ҳозирча мавжуд эмас.*\n\n"
-        "Сабаблар:\n"
-        "• Савол аниқ маълумот сақламайди\n"
-        "• Билимлар базасида маълумот йўқ\n"
-        "• Ташқи манбалар вақтинча мавжуд эмас\n\n"
-        "Савол сақланди. Билимлар базаси тўлдирилмоқда.\n"
-        "24 соатдан кейин қайта мурожаат қилинг\n"
-        "ёки саволни аниқлаштиринг: авто маркаси, йили, хато коди."
-    ),
-    "uz_latin": (
-        "⏳ *Ushbu savol bo'yicha javob hozircha mavjud emas.*\n\n"
-        "Sabablar:\n"
-        "• Savol aniq ma'lumot o'z ichiga olmaydi\n"
-        "• Bilimlar bazasida ma'lumot yo'q\n"
-        "• Tashqi manbalar vaqtincha mavjud emas\n\n"
-        "Savol saqlandi. Bilimlar bazasi to'ldirilmoqda.\n"
-        "24 soatdan keyin qayta murojaat qiling\n"
-        "yoki savolni aniqlashtiring: avto markasi, yili, xato kodi."
-    ),
-    "ru_translit": (
-        "⏳ Otvet po dannomu voprosu vremenno nedostupen.\n\n"
-        "Prichiny: vopros ne soderjit dostatochno dannyh, "
-        "ili informatsiya otsutstvuet v baze.\n\n"
-        "Vopros sohranen. Obratites cherez 24 chasa "
-        "ili utochnite: marka avto, god, kod oshibki."
-    ),
-}
-
-INTRO_RE = re.compile(
-    r"^(?:у\s+меня\s+)?(?:есть|будет)\s+(?:один\s+)?вопрос\b|"
-    r"^(?:можно|хочу)\s+(?:вам\s+)?задать\s+вопрос\b|"
-    r"^можно\s+вопрос\b|^савол(?:им)?\s+бор\b|^савол\s+берсам\b|"
-    r"^savol(?:im)?\s+bor\b|^savol\s+bersam\b|"
-    r"^bir\s+savol\b|^menda\s+savol\s+bor\b",
-    re.IGNORECASE | re.UNICODE,
-)
-
 
 def is_dialog_intro(text: str) -> bool:
     """Распознаёт вступление, после которого пользователь ещё задаст вопрос."""
@@ -1253,6 +1159,78 @@ def progress_text(lang: str, percent: int, context_label: str = "") -> str:
             90:  "Pochti gotovo...",
             100: "Gotovo!",
         },
+        "en": {
+            10:  "Downloading image...",
+            25:  "Analysing content...",
+            45:  "Recognising text and codes...",
+            60:  "Searching knowledge base...",
+            75:  "Preparing answer...",
+            90:  "Almost ready...",
+            100: "Done!",
+        },
+        "uk": {
+            10:  "Завантажую зображення...",
+            25:  "Аналізую вміст...",
+            45:  "Розпізнаю текст та коди...",
+            60:  "Шукаю в базі знань...",
+            75:  "Формую відповідь...",
+            90:  "Майже готово...",
+            100: "Готово!",
+        },
+        "be": {
+            10:  "Спампоўваю выяву...",
+            25:  "Аналізую змест...",
+            45:  "Распазнаю тэкст і коды...",
+            60:  "Шукаю ў базе ведаў...",
+            75:  "Фармірую адказ...",
+            90:  "Амаль гатова...",
+            100: "Гатова!",
+        },
+        "de": {
+            10:  "Bild wird heruntergeladen...",
+            25:  "Inhalt wird analysiert...",
+            45:  "Text und Codes werden erkannt...",
+            60:  "Suche in der Wissensdatenbank...",
+            75:  "Antwort wird vorbereitet...",
+            90:  "Fast fertig...",
+            100: "Fertig!",
+        },
+        "kk": {
+            10:  "Сурет жүктелуде...",
+            25:  "Мазмұн талдануда...",
+            45:  "Мәтін мен кодтар анықталуда...",
+            60:  "Білім қорынан іздеуде...",
+            75:  "Жауап дайындалуда...",
+            90:  "Дерлік дайын...",
+            100: "Дайын!",
+        },
+        "ky": {
+            10:  "Сүрөт жүктөлүүдө...",
+            25:  "Мазмун талдануудa...",
+            45:  "Текст жана кодтор аныкталууда...",
+            60:  "Билим базасынан издөөдө...",
+            75:  "Жооп даярдалууда...",
+            90:  "Дээрлик даяр...",
+            100: "Даяр!",
+        },
+        "tg": {
+            10:  "Тасвир боргирӣ мешавад...",
+            25:  "Мазмун таҳлил мешавад...",
+            45:  "Матн ва рамзҳо муайян мешаванд...",
+            60:  "Дар пойгоҳи дониш ҷустуҷӯ...",
+            75:  "Ҷавоб омода мешавад...",
+            90:  "Қариб тайёр...",
+            100: "Тайёр!",
+        },
+        "tk": {
+            10:  "Surat ýüklenýär...",
+            25:  "Mazmuny derňelýär...",
+            45:  "Tekst we kodlar kesgitlenýär...",
+            60:  "Bilim bazasynda gözlenýär...",
+            75:  "Jogap taýýarlanýär...",
+            90:  "Diýen ýaly taýýar...",
+            100: "Taýýar!",
+        },
     }
     lang_stages = STAGE_LABELS.get(lang, STAGE_LABELS["ru"])
     # Берём подсказку для ближайшего этапа
@@ -1572,29 +1550,34 @@ async def _call_ai_with_fallback(
     if GROQ_API_KEY:
         answer = await _call_groq(system, messages, question)
         if answer:
-            return answer
+            logger.info("AI ответ: Groq (llama-3.3-70b)")
+            return answer, "Groq"
 
     # 2. DeepSeek (почти бесплатно, отличен для технических авто-вопросов)
     if DEEPSEEK_API_KEY:
         answer = await _call_deepseek(system, messages, question)
         if answer:
-            return answer
+            logger.info("AI ответ: DeepSeek (deepseek-chat)")
+            return answer, "DeepSeek"
 
     # 3. Kimi / Moonshot (бесплатно, лучший для китайских авто и оборудования)
     if KIMI_API_KEY:
         answer = await _call_kimi(system, messages, question)
         if answer:
-            return answer
+            logger.info("AI ответ: Kimi (moonshot-v1-8k)")
+            return answer, "Kimi"
 
     # 4. Gemini (бесплатно, gemini-1.5-flash)
     if GEMINI_API_KEY:
         answer = await _call_gemini(system, messages, question)
         if answer:
-            return answer
+            logger.info("AI ответ: Gemini (gemini-1.5-flash)")
+            return answer, "Gemini"
 
     # 5. Claude Haiku (платный fallback — только если все остальные недоступны)
     answer = await _call_claude_haiku(system, messages, question)
-    return answer
+    logger.info("AI ответ: Claude Haiku (fallback)")
+    return answer, "Claude"
 
 
 async def generate_answer(
@@ -1622,7 +1605,7 @@ async def generate_answer(
     if FILE_MANAGER_AVAILABLE and is_file_request(question) and msg_obj is not None:
         handled = await handle_file_request(msg_obj, question, lang, ctx_obj)
         if handled:
-            return "", "file"  # Сигнал что ответ уже отправлен напрямую
+            return "", "file", ""  # Сигнал что ответ уже отправлен напрямую
 
     # ── Шаг 1: Ищем в Базе Знаний ────────────────────────────────────────────
     # База знаний — это JSON-файл с готовыми вопросами и ответами.
@@ -1634,7 +1617,7 @@ async def generate_answer(
     if kb_result:
         # Нашли в базе знаний — формируем ответ с заголовком
         answer = f"📚 *Из базы знаний:*\n\n{kb_result['answer']}"
-        return answer, "kb"  # "kb" = knowledge base
+        return answer, "kb", ""  # "kb" = knowledge base
 
     # ── Шаг 2–4: Внешний поиск ───────────────────────────────────────────────
     logger.info(f"Начинаем внешний поиск | вопрос='{question[:60]}'")
@@ -1676,7 +1659,7 @@ async def generate_answer(
         # ── Многоуровневый AI: пробуем бесплатные модели сначала ─────────────
         # Порядок: Groq (бесплатно) → Gemini (бесплатно) → Claude (платно)
         # Используем первый успешный ответ.
-        ai_answer = await _call_ai_with_fallback(
+        ai_answer, ai_source = await _call_ai_with_fallback(
             system=system,
             messages=get_history(chat_id, user_id),
             question=question,
@@ -1685,7 +1668,7 @@ async def generate_answer(
         if not ai_answer:
             logger.warning("AI вернул пустой ответ; вопрос сохранён в pending")
             kb_manager.add_pending_question(user_id, username, question, chat_id)
-            return UNAVAILABLE_MSG.get(lang, UNAVAILABLE_MSG["ru"]), "unavailable"
+            return UNAVAILABLE_MSG.get(lang, UNAVAILABLE_MSG["ru"]), "unavailable", ""
 
         # Сохраняем ответ AI в историю диалога
         add_history(chat_id, user_id, "assistant", ai_answer)
@@ -1693,7 +1676,7 @@ async def generate_answer(
         # Сохраняем вопрос для самообучения базы знаний
         kb_manager.add_pending_question(user_id, username, question, chat_id)
 
-        return ai_answer, "web_ai" if web_source else "ai"
+        return ai_answer, ("web_ai" if web_source else "ai"), ai_source
 
     except Exception as e:
         # Что-то пошло не так (нет интернета, проблема с API и т.д.)
@@ -1701,7 +1684,7 @@ async def generate_answer(
         kb_manager.add_pending_question(user_id, username, question, chat_id)
         reason = user_error_reason(e)
         fallback = UNAVAILABLE_MSG.get(lang, UNAVAILABLE_MSG["ru"])
-        return f"❌ Причина: {reason}.\n\n{fallback}", "error"
+        return f"❌ Причина: {reason}.\n\n{fallback}", "error", ""
 
 
 # ==============================================================================
@@ -1862,7 +1845,7 @@ async def process_user_question(
     )
 
     try:
-        answer, source = await generate_answer(
+        answer, source, ai_source = await generate_answer(
             user_id, question, lang, username, msg.chat_id,
             msg_obj=msg, ctx_obj=context,
         )
@@ -1908,6 +1891,9 @@ async def process_user_question(
         "error": "❌ Ошибка обработки",
     }
     label = source_labels.get(source, "🤖 AI_Diag_UZ")
+    # Добавляем имя AI системы в футер если источник — AI
+    if source in {"ai", "web_ai"} and ai_source:
+        label = f"{label} · {ai_source}"
 
     # ── Спойлер для длинных ответов (порог: 4 непустые строки) ─────────────
     # Строки 1–3 видны сразу. Строки 4+ скрыты под спойлером.
@@ -3346,6 +3332,14 @@ async def send_satisfaction_buttons(
         "uz_latin":    "Javobdan qoniqdingizmi?",
         "uz_cyrillic": "Жавобдан қониқдингизми?",
         "ru_translit": "Vy udovletvoreny otvetom?",
+        "en":          "Are you satisfied with the answer?",
+        "uk":          "Чи задоволені Ви відповіддю?",
+        "be":          "Ці задаволены Вы адказам?",
+        "de":          "Sind Sie mit der Antwort zufrieden?",
+        "kk":          "Жауаппен қанағаттандыңыз ба?",
+        "ky":          "Жооптон канааттандыңызбы?",
+        "tg":          "Оё шумо аз ҷавоб қонеъ ҳастед?",
+        "tk":          "Jogapdan razy boldyňyzmy?",
     }
     keyboard = InlineKeyboardMarkup([[
         InlineKeyboardButton("✅ Спасибо / Rahmat",
@@ -3640,7 +3634,7 @@ async def handle_satisfaction_callback(
 
         # Повторяем поиск с пометкой "исключить предыдущий ответ"
         retry_question = f"{question} (другой вариант, предыдущий ответ не подошёл)"
-        retry_answer, retry_source = await generate_answer(
+        retry_answer, retry_source, retry_ai_source = await generate_answer(
             user_id=user_id,
             question=retry_question,
             lang=lang,
@@ -3737,24 +3731,55 @@ async def send_combined_rating_buttons(
         "uz_latin":    "Javobdan qoniqdingizmi?",
         "uz_cyrillic": "Жавобдан қониқдингизми?",
         "ru_translit": "Vy udovletvoreny otvetom?",
+        "en":          "Are you satisfied with the answer?",
+        "uk":          "Чи задоволені Ви відповіддю?",
+        "be":          "Ці задаволены Вы адказам?",
+        "de":          "Sind Sie mit der Antwort zufrieden?",
+        "kk":          "Жауаппен қанағаттандыңыз ба?",
+        "ky":          "Жооптон канааттандыңызбы?",
+        "tg":          "Оё шумо аз ҷавоб қонеъ ҳастед?",
+        "tk":          "Jogapdan razy boldyňyzmy?",
     }
 
-    # Одна форма — 3 кнопки для всех.
-    # Доступ проверяется в handle_combined_rating_callback.
+    # Кнопки на языке пользователя
+    BTN_OK = {
+        "ru": "✅ Спасибо", "uz_latin": "✅ Rahmat",
+        "uz_cyrillic": "✅ Rahmat", "ru_translit": "✅ Spasibo",
+        "en": "✅ Thank you", "uk": "✅ Дякую",
+        "be": "✅ Дзякуй", "de": "✅ Danke",
+        "kk": "✅ Рақмет", "ky": "✅ Рахмат",
+        "tg": "✅ Ташаккур", "tk": "✅ Sag boluň",
+    }
+    BTN_CLARIFY = {
+        "ru": "🔧 Уточнить", "uz_latin": "🔧 Aniqlash",
+        "uz_cyrillic": "🔧 Aniqlash", "ru_translit": "🔧 Utochnit",
+        "en": "🔧 Clarify", "uk": "🔧 Уточнити",
+        "be": "🔧 Удакладніць", "de": "🔧 Klären",
+        "kk": "🔧 Нақтылау", "ky": "🔧 Тактоо",
+        "tg": "🔧 Равшан кунед", "tk": "🔧 Anyklamak",
+    }
+    BTN_WRONG = {
+        "ru": "❌ Не верно", "uz_latin": "❌ Noto'g'ri",
+        "uz_cyrillic": "❌ Noto'g'ri", "ru_translit": "❌ Ne verno",
+        "en": "❌ Incorrect", "uk": "❌ Невірно",
+        "be": "❌ Няверна", "de": "❌ Falsch",
+        "kk": "❌ Қате", "ky": "❌ Туура эмес",
+        "tg": "❌ Нодуруст", "tk": "❌ Nädogry",
+    }
     keyboard = InlineKeyboardMarkup([
         [
             InlineKeyboardButton(
-                "✅ Спасибо / Rahmat",
+                BTN_OK.get(lang, BTN_OK["ru"]),
                 callback_data=f"sat_ok:{btn_id}",
             ),
         ],
         [
             InlineKeyboardButton(
-                "🔧 Уточнить / Aniqlashtirish",
+                BTN_CLARIFY.get(lang, BTN_CLARIFY["ru"]),
                 callback_data=f"sat_clarify:{btn_id}",
             ),
             InlineKeyboardButton(
-                "❌ Не верно / Noto'g'ri",
+                BTN_WRONG.get(lang, BTN_WRONG["ru"]),
                 callback_data=f"sat_wrong:{btn_id}",
             ),
         ],

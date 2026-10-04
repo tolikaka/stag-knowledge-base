@@ -14,6 +14,15 @@ echo   Stop: Ctrl+C
 echo ============================================================
 echo.
 
+REM Clear Python cache to prevent stale .pyc files
+if exist __pycache__ (
+    echo Clearing Python cache...
+    rd /s /q __pycache__
+    echo Cache cleared OK
+) else (
+    echo Cache: clean
+)
+
 REM Run auth_telethon.py every time.
 REM If session is valid - exits in 1-2 sec without questions.
 REM If session missing or broken - runs interactive auth.
