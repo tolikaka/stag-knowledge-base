@@ -1,6 +1,6 @@
 {
   "version": "1.0",
-  "last_updated": "2026-10-02T23:21:41.527423",
+  "last_updated": "2026-10-04T16:20:40.813812",
   "files": [
     {
       "id": "f003",
@@ -215,6 +215,39 @@
       "local_path": "files_cache/Расчет газовых форсунок Lpg Cng v61.exe",
       "telegram_file_id": null,
       "size_bytes": 10306172,
+      "downloaded": true,
+      "category": "software",
+      "note": ""
+    },
+    {
+      "id": "f015",
+      "name": "Эволюция Stag Gemini",
+      "filename": "Эволюция STAG_Gemini.docx",
+      "description": "описание истории изменения продукции СТАГ",
+      "keywords": [
+        "история СТАГ",
+        "STAG history"
+      ],
+      "source_url": "",
+      "local_path": "C:\\stag_bot\\files_cache\\Эволюция STAG_Gemini.docx",
+      "telegram_file_id": "BQACAgIAAyEFAAMBBF62DwADo2rCMPb5jTwynO1F7nru602OXBfAAAKUpwACy2MZSoIrV_mpJsP_PQQ",
+      "size_bytes": 1274776,
+      "downloaded": true,
+      "category": "manual",
+      "note": ""
+    },
+    {
+      "id": "f016",
+      "name": "Setupeasy Тест",
+      "filename": "SetupEasy_тест.exe",
+      "description": "тестовая программа",
+      "keywords": [
+        "тест"
+      ],
+      "source_url": "",
+      "local_path": "C:\\stag_bot\\files_cache\\SetupEasy_тест.exe",
+      "telegram_file_id": "BQACAgIAAyEFAAMBBF62DwADqGrCNU3wtGzrUzp-VFNbWtK6vE_sAAKtpwACy2MZSqVHcDzzCZBtPQQ",
+      "size_bytes": 51835489,
       "downloaded": true,
       "category": "software",
       "note": ""

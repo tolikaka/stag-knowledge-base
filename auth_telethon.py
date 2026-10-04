@@ -1,4 +1,4 @@
-# FILE: auth_telethon.py | VERSION: 1.1.0 | DATE: 2026-10-04
+# FILE: auth_telethon.py | VERSION: 1.1.1 | DATE: 2026-10-04
 """
 auth_telethon.py — Авторизация Telethon
 ========================================
@@ -54,6 +54,23 @@ async def main():
         print("telethon не установлен — пропускаем")
         sys.exit(0)
 
+    # Проверяем повреждение файла сессии ДО подключения
+    session_file = SESSION + ".session"
+    if os.path.exists(session_file):
+        import sqlite3 as _sqlite3
+        _conn = None
+        try:
+            _conn = _sqlite3.connect(session_file)
+            _conn.execute("select name from sqlite_master where type='table'")
+            _conn.close()
+        except _sqlite3.DatabaseError:
+            if _conn:
+                _conn.close()
+            print()
+            print("  Файл сессии повреждён — удаляем и запускаем авторизацию заново.")
+            print(f"  Удалён: {session_file}")
+            os.remove(session_file)
+
     client = TelegramClient(SESSION, API_ID, API_HASH, receive_updates=False)
 
     try:
@@ -66,7 +83,7 @@ async def main():
             await client.disconnect()
             sys.exit(0)
 
-        # Сессия повреждена или отсутствует — авторизуемся
+        # Сессия отсутствует — авторизуемся
         await client.disconnect()
 
     except Exception:
