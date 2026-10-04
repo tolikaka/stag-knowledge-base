@@ -1,4 +1,4 @@
-# FILE: knowledge_manager.py | VERSION: 1.1.0 | DATE: 2026-10-04
+# FILE: knowledge_manager.py | VERSION: 1.1.1 | DATE: 2026-10-04
 # ==============================================================================
 #  knowledge_manager.py  —  Управление базой знаний AI_Diag_UZ
 # ==============================================================================
@@ -270,6 +270,9 @@ class KnowledgeManager:
         # Время последней успешной синхронизации
         self._last_sync: Optional[datetime] = None
 
+        # Флаг первой загрузки — предотвращает двойной лог при двух потоках
+        self._loaded: bool = False
+
         # asyncio Lock — предотвращает одновременный доступ к данным
         # из разных асинхронных задач (race condition)
         self._lock = asyncio.Lock()
@@ -281,25 +284,60 @@ class KnowledgeManager:
     async def load(self) -> None:
         """
         Загружает базу знаний при запуске системы.
+        Если уже загружена — пропускает загрузку (вызывается из двух потоков).
 
-        Приоритет: GitHub (актуальная облачная версия) → Локальный файл.
-        После загрузки перестраивает поисковый индекс.
+        Приоритет: Локальный файл (основной) → GitHub (только если локального нет).
+
+        Архитектура:
+        - Локальный файл = основной источник (быстро, всегда актуален)
+        - GitHub = резервная копия (восстановление при утере локального файла)
+        - Синхронизация: локальный → GitHub (после каждого изменения БЗ)
         """
-        loaded_from_github = False
+        from pathlib import Path
 
-        # Пробуем загрузить с GitHub если настроен токен
-        if GITHUB_TOKEN and GITHUB_REPO:
-            loaded_from_github = await self._load_from_github()
+        # Если уже загружена — только перестраиваем индекс без повторного лога
+        if self._loaded:
+            self._rebuild_index()
+            return
 
-        # Если GitHub недоступен или не настроен — загружаем локально
-        if not loaded_from_github:
+        local_path = Path(LOCAL_KB_PATH)
+        local_exists = local_path.exists() and local_path.stat().st_size > 10
+
+        if local_exists:
+            # Основной сценарий: загружаем локально
             await self._load_local()
+            logger.info(
+                "✅ База знаний загружена локально: %s", LOCAL_KB_PATH
+            )
+        else:
+            # Восстановление: локального файла нет — берём с GitHub
+            logger.warning(
+                "Локальный файл не найден — загружаю с GitHub (восстановление)"
+            )
+            loaded_from_github = False
+            if GITHUB_TOKEN and GITHUB_REPO:
+                loaded_from_github = await self._load_from_github()
+
+            if loaded_from_github:
+                # Сохраняем восстановленную копию локально
+                await self._save_local()
+                logger.info(
+                    "✅ База знаний восстановлена с GitHub и сохранена локально"
+                )
+            else:
+                # GitHub тоже недоступен — создаём пустую БЗ
+                logger.warning(
+                    "GitHub недоступен — создаю пустую базу знаний"
+                )
+                await self._load_local()  # создаст файл из DEFAULT_KB
 
         # Перестраиваем TF-IDF индекс для поиска
         self._rebuild_index()
 
+        self._loaded = True
         logger.info(
-            f"База знаний загружена: {len(self._kb.get('entries', []))} записей"
+            "База знаний загружена: %d записей",
+            len(self._kb.get("entries", []))
         )
 
     async def _load_from_github(self) -> bool:
@@ -394,7 +432,7 @@ class KnowledgeManager:
                     return
 
                 self._kb = json.loads(content)
-                logger.info(f"✅ База знаний загружена локально: {path}")
+                logger.debug(f"_load_local: прочитан файл {path}")
 
             except json.JSONDecodeError as e:
                 logger.warning(
