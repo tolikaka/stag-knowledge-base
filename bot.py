@@ -184,6 +184,15 @@ TRIGGER_RE = re.compile(
     re.IGNORECASE | re.UNICODE,
 )
 
+# Паттерн вступительных фраз — когда пользователь только обращается к боту
+# без конкретного вопроса (например просто "Уста" или "Уста, привет")
+INTRO_RE = re.compile(
+    r"^(?:usto|usta|усто|уста|@cardiaguz_bot)"
+    r"(?:[\s,\.!?]*(?:привет|здравствуй|hello|hi|salom|assalom|"
+    r"салом|ассалом|мархамат|marhamat)?[\s,\.!?]*)$",
+    re.IGNORECASE | re.UNICODE,
+)
+
 
 def contains_trigger(text: str) -> bool:
     """
