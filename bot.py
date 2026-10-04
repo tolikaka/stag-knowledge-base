@@ -1,3 +1,4 @@
+# FILE: bot.py | VERSION: 1.1.0 | DATE: 2026-10-04
 # ==============================================================================
 #  bot.py  —  Главный файл Telegram-бота AI_Diag_UZ («Уста»)
 # ==============================================================================
@@ -2912,7 +2913,7 @@ async def handle_feedback_callback(
             import re as _re
             words = [w.lower() for w in _re.findall(r"[\w]{3,}", question)][:8]
 
-            await kb_manager.add_entry(
+            kb_manager.add_entry(
                 question=question,
                 answer=answer,
                 category=category,
@@ -2936,13 +2937,11 @@ async def handle_feedback_callback(
     elif action == "fb_bad":
         # ── "Не верно" — отправляем в очередь корректировки ─────────────────
         try:
-            await kb_manager.add_pending_question(
+            kb_manager.add_pending_question(
                 user_id=fb_user,
                 username=username,
                 message_text=f"[КОРРЕКТИРОВКА] {question}",
                 chat_id=chat_id,
-                ai_answer=answer,  # Сохраняем текущий ответ для сравнения
-                status="needs_correction",
             )
             logger.info(
                 f"Обратная связь 'Не верно': вопрос отправлен на корректировку | "
@@ -3447,7 +3446,7 @@ async def handle_satisfaction_callback(
     }.get(action)
     if stat_key:
         try:
-            await kb_manager.record_feedback(question, stat_key)
+            kb_manager.record_feedback(question, stat_key)
         except Exception as e:
             logger.warning(f"Ошибка записи статистики: {e}")
     logger.info(
@@ -3617,13 +3616,11 @@ async def handle_satisfaction_callback(
                 pass
             # Сохраняем в pending для обработки администратором
             try:
-                await kb_manager.add_pending_question(
+                kb_manager.add_pending_question(
                     user_id=user_id,
                     username=username,
                     message_text=f"[НЕВЕРНЫЙ ОТВЕТ x2] {question}",
                     chat_id=chat_id,
-                    ai_answer=answer,
-                    status="needs_correction",
                 )
             except Exception as e:
                 logger.error(f"Ошибка сохранения в pending: {e}")
@@ -3697,11 +3694,10 @@ async def handle_satisfaction_callback(
             except Exception:
                 pass
             try:
-                await kb_manager.add_pending_question(
+                kb_manager.add_pending_question(
                     user_id=user_id, username=username,
                     message_text=f"[НЕВЕРНЫЙ ОТВЕТ] {question}",
                     chat_id=chat_id, ai_answer=answer,
-                    status="needs_correction",
                 )
             except Exception as e:
                 logger.error(f"Ошибка сохранения в pending: {e}")
