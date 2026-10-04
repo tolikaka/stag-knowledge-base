@@ -80,6 +80,8 @@ echo Committing: %MSG%
 git commit -m "%MSG%"
 
 :push_only
+REM -- Pull first to avoid rejected push -------------------------
+git pull origin main --rebase --autostash >nul 2>&1
 REM -- Push to GitHub -------------------------------------------
 echo.
 echo Pushing to GitHub...
