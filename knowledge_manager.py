@@ -1,3 +1,4 @@
+# FILE: knowledge_manager.py | VERSION: 1.1.0 | DATE: 2026-10-04
 # ==============================================================================
 #  knowledge_manager.py  —  Управление базой знаний AI_Diag_UZ
 # ==============================================================================
@@ -430,6 +431,25 @@ class KnowledgeManager:
             "pending_learning": []
         }
 
+    def _save_sync(self) -> None:
+        """
+        Синхронная обёртка для сохранения БЗ на диск.
+        Вызывается из синхронных методов-мутаторов.
+        Использует текущий event loop если он запущен,
+        иначе создаёт новый.
+        """
+        import asyncio as _asyncio
+        try:
+            loop = _asyncio.get_event_loop()
+            if loop.is_running():
+                loop.create_task(self._save_local())
+            else:
+                loop.run_until_complete(self._save_local())
+        except RuntimeError:
+            _asyncio.run(self._save_local())
+        except Exception as e:
+            logger.error("Ошибка сохранения БЗ: %s", e)
+
     async def _save_local(self) -> None:
         """
         Сохраняет текущую базу знаний в локальный JSON-файл.
@@ -442,8 +462,13 @@ class KnowledgeManager:
 
         # Записываем JSON с форматированием (indent=2 — отступ 2 пробела)
         # ensure_ascii=False — сохраняем кириллицу как есть (не как \u0441...)
-        async with aiofiles.open(path, "w", encoding="utf-8") as f:
-            await f.write(json.dumps(self._kb, ensure_ascii=False, indent=2))
+        # Атомарная запись: пишем во временный файл, затем переименовываем.
+        # Это предотвращает повреждение файла при сбое в момент записи.
+        tmp_path = path.with_suffix(".tmp")
+        data = json.dumps(self._kb, ensure_ascii=False, indent=2)
+        async with aiofiles.open(tmp_path, "w", encoding="utf-8") as f:
+            await f.write(data)
+        tmp_path.replace(path)  # атомарная операция на уровне ОС
 
     # ==========================================================================
     #  СИНХРОНИЗАЦИЯ С GITHUB
@@ -881,6 +906,7 @@ class KnowledgeManager:
         self._rebuild_index()
 
         logger.info(f"Добавлена запись: {entry_id} — {question[:50]}")
+        self._save_sync()
         return entry
 
     def update_entry(self, entry_id: str, **kwargs) -> bool:
@@ -908,6 +934,7 @@ class KnowledgeManager:
                 # Перестраиваем индекс
                 self._rebuild_index()
                 logger.info(f"Обновлена запись: {entry_id}")
+                self._save_sync()
                 return True
 
         logger.warning(f"Запись не найдена для обновления: {entry_id}")
@@ -934,6 +961,7 @@ class KnowledgeManager:
             # Запись была удалена — перестраиваем индекс
             self._rebuild_index()
             logger.info(f"Удалена запись: {entry_id}")
+            self._save_sync()
             return True
 
         logger.warning(f"Запись не найдена для удаления: {entry_id}")
@@ -999,6 +1027,7 @@ class KnowledgeManager:
         }
         pending_list.append(pending_entry)
         logger.info(f"Сохранён вопрос для самообучения: {message_text[:50]}")
+        self._save_sync()
 
     def get_pending(self) -> list[dict]:
         """
@@ -1031,6 +1060,7 @@ class KnowledgeManager:
             if pending["id"] == pending_id:
                 pending["status"] = status
                 logger.info(f"Статус вопроса {pending_id} изменён на: {status}")
+                self._save_sync()
                 return True
         return False
 
