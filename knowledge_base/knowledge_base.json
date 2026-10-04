@@ -221,6 +221,15 @@
       "chat_id": -1004368283151,
       "timestamp": "2026-10-04T20:46:47.558003+00:00",
       "status": "new"
+    },
+    {
+      "id": "pend_760f2e86",
+      "user_id": 39425955,
+      "username": "AnatoliyAndrianov",
+      "message_text": "what does P0089 mean?",
+      "chat_id": -1004368283151,
+      "timestamp": "2026-10-04T21:15:07.586556+00:00",
+      "status": "new"
     }
   ]
 }
