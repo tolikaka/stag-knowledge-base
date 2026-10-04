@@ -17,7 +17,7 @@
       "source": "manual",
       "created_at": "2024-01-01T00:00:00",
       "updated_at": "2024-01-01T00:00:00",
-      "usage_count": 0
+      "usage_count": 1
     },
     {
       "id": "kb_002",
@@ -202,6 +202,15 @@
       "message_text": "[ТРЕБУЕТ УТОЧНЕНИЯ - ADMIN] машина газга утмаяпти. Шунака хато беряпти. Нимадан булиш мумкин?",
       "chat_id": -1004368283151,
       "timestamp": "2026-10-04T09:25:00.335513+00:00",
+      "status": "new"
+    },
+    {
+      "id": "pend_8761f3e5",
+      "user_id": 39425955,
+      "username": "AnatoliyAndrianov",
+      "message_text": "P0089 error Chevrolet Equinox what does it mean",
+      "chat_id": -1004368283151,
+      "timestamp": "2026-10-04T20:26:16.861921+00:00",
       "status": "new"
     }
   ]

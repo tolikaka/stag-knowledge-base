@@ -1626,7 +1626,8 @@ async def generate_answer(
     if kb_result:
         # Нашли в базе знаний — формируем ответ с заголовком
         answer = f"📚 *Из базы знаний:*\n\n{kb_result['answer']}"
-        return answer, "kb", ""  # "kb" = knowledge base
+        logger.info("Ответ из базы знаний: %s", answer[:50].replace("\n"," "))
+        return answer, "kb", "📚 БЗ"  # "kb" = knowledge base
 
     # ── Шаг 2–4: Внешний поиск ───────────────────────────────────────────────
     logger.info(f"Начинаем внешний поиск | вопрос='{question[:60]}'")
@@ -1702,6 +1703,38 @@ async def generate_answer(
 #  Обработчик — это функция, которая вызывается когда приходит
 #  определённый тип сообщения.
 # ==============================================================================
+
+
+COMPLETED_MSG = {
+    "ru":          "✅ Обработка завершена: 100%",
+    "uz_latin":    "✅ Qayta ishlash yakunlandi: 100%",
+    "uz_cyrillic": "✅ Қайта ишлаш якунланди: 100%",
+    "ru_translit": "✅ Obrabotka zavershena: 100%",
+    "en":          "✅ Processing complete: 100%",
+    "uk":          "✅ Обробку завершено: 100%",
+    "be":          "✅ Апрацоўка завершана: 100%",
+    "de":          "✅ Verarbeitung abgeschlossen: 100%",
+    "kk":          "✅ Өңдеу аяқталды: 100%",
+    "ky":          "✅ Иштетүү аяқталды: 100%",
+    "tg":          "✅ Коркарди анҷом ёфт: 100%",
+    "tk":          "✅ Gaýtadan işlemek tamamlandy: 100%",
+}
+
+COMPLETED_WARN = {
+    "ru":          "⚠️ Обработка завершена без готового ответа: 100%",
+    "uz_latin":    "⚠️ Tayyor javobsiz qayta ishlash yakunlandi: 100%",
+    "uz_cyrillic": "⚠️ Тайёр жавобсиз қайта ишлаш якунланди: 100%",
+    "ru_translit": "⚠️ Obrabotka zavershena bez otveta: 100%",
+    "en":          "⚠️ Processing complete without a ready answer: 100%",
+    "uk":          "⚠️ Обробку завершено без готової відповіді: 100%",
+    "be":          "⚠️ Апрацоўка завершана без гатовага адказу: 100%",
+    "de":          "⚠️ Verarbeitung ohne fertige Antwort abgeschlossen: 100%",
+    "kk":          "⚠️ Дайын жауапсыз өңдеу аяқталды: 100%",
+    "ky":          "⚠️ Даяр жоопсуз иштетүү аяқталды: 100%",
+    "tg":          "⚠️ Коркард бидуни ҷавоби тайёр анҷом ёфт: 100%",
+    "tk":          "⚠️ Taýýar jogapsyz gaýtadan işlemek tamamlandy: 100%",
+}
+
 
 async def process_user_question(
     msg: Message,
@@ -1883,9 +1916,9 @@ async def process_user_question(
         except Exception:
             pass
 
-    completed = "✅ Обработка завершена: 100%\n" + progress_bar(100)
+    completed = COMPLETED_MSG.get(lang, COMPLETED_MSG["ru"]) + "\n" + progress_bar(100)
     if source in {"error", "unavailable"}:
-        completed = "⚠️ Обработка завершена без готового ответа: 100%\n" + progress_bar(100)
+        completed = COMPLETED_WARN.get(lang, COMPLETED_WARN["ru"]) + "\n" + progress_bar(100)
     try:
         await status_message.edit_text(completed)
     except Exception:
@@ -1900,6 +1933,8 @@ async def process_user_question(
         "error": "❌ Ошибка обработки",
     }
     label = source_labels.get(source, "🤖 AI_Diag_UZ")
+    if ai_source and ai_source != "📚 БЗ":
+        label = f"{label} · {ai_source}"
     # Добавляем имя AI системы в футер если источник — AI
     if source in {"ai", "web_ai"} and ai_source:
         label = f"{label} · {ai_source}"
