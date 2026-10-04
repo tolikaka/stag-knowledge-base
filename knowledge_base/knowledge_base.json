@@ -17,7 +17,7 @@
       "source": "manual",
       "created_at": "2024-01-01T00:00:00",
       "updated_at": "2024-01-01T00:00:00",
-      "usage_count": 1
+      "usage_count": 2
     },
     {
       "id": "kb_002",
@@ -211,6 +211,15 @@
       "message_text": "P0089 error Chevrolet Equinox what does it mean",
       "chat_id": -1004368283151,
       "timestamp": "2026-10-04T20:26:16.861921+00:00",
+      "status": "new"
+    },
+    {
+      "id": "pend_8c2f8ca6",
+      "user_id": 39425955,
+      "username": "AnatoliyAndrianov",
+      "message_text": "what does error P0089 mean?",
+      "chat_id": -1004368283151,
+      "timestamp": "2026-10-04T20:46:47.558003+00:00",
       "status": "new"
     }
   ]

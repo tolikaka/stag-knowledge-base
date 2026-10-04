@@ -264,6 +264,192 @@ def extract_question(text: str) -> str:
 #     (латиница, но не узбекский)
 # ==============================================================================
 
+
+LANG_INSTRUCTION: dict[str, str] = {
+    "ru": (
+        "Отвечай ТОЛЬКО на русском языке, кириллицей. "
+        "Не используй латиницу в ответе."
+    ),
+    "uz_cyrillic": (
+        "Фақат ўзбек тилида жавоб бер, кирилл ёзувида. "
+        "Рус тилидан фойдаланма."
+        # Перевод: "Отвечай только на узбекском, кириллицей. Не используй русский."
+    ),
+    "uz_latin": (
+        "Faqat o'zbek tilida javob ber, lotin yozuvida. "
+        "Rus tilidan foydalanma."
+        # Перевод: "Отвечай только на узбекском, латиницей. Не используй русский."
+    ),
+    "ru_translit": (
+        "Вопрос написан русским транслитом (латиницей). "
+        "Отвечай на русском языке. "
+        "Если вопрос написан латиницей-транслитом — ответ тоже дай латиницей-транслитом."
+    ),
+    "en": ("Answer ONLY in English. Do not use Russian or other languages."),
+    "uk": ("Відповідай ТІЛЬКИ українською мовою. Не використовуй російську мову."),
+    "be": ("Адказвай ТОЛЬКІ па-беларуску. Не выкарыстоўвай рускую мову."),
+    "de": ("Antworte NUR auf Deutsch. Verwende keine andere Sprache."),
+    "kk": ("Тек қазақ тілінде жауап бер. Орыс тілін пайдаланба."),
+    "ky": ("Жооп ГАНА кыргыз тилинде бер. Орус тилин колдонбо."),
+    "tg": ("Танҳо бо забони тоҷикӣ ҷавоб деҳ. Забони русиро истифода набар."),
+    "tk": ("Diňe türkmen dilinde jogap ber. Başga dil ulanma."),
+}
+
+
+# ==============================================================================
+#  УТОЧНЯЮЩИЕ ВОПРОСЫ
+#
+#  Если пользователь написал слишком коротко или непонятно,
+#  бот задаёт уточняющий вопрос на том же языке.
+#  Например: "Уста, помогите!" — непонятно с чем помочь.
+# ==============================================================================
+CLARIFY_MSG: dict[str, str] = {
+    "ru": (
+        "🤔 Пожалуйста, уточните вопрос:\n\n"
+        "• *Автомобиль:* марка, модель, год, двигатель\n"
+        "• *Система:* двигатель, АКПП, ABS, ГБО и т.д.\n"
+        "• *Что происходит:* симптомы и условия появления\n"
+        "• *Диагностика:* код неисправности, сканер и измеренные параметры\n\n"
+        "Пример: _Уста, Chevrolet Cobalt 2022, P0171, коррекция +25%, "
+        "нестабильный холостой ход_"
+    ),
+    "uz_cyrillic": (
+        "🤔 Илтимос, саволни аниқлаштиринг:\n\n"
+        "• *Автомобил:* марка, модел, йил, двигатель\n"
+        "• *Тизим:* двигатель, АКПП, ABS, ГБО ва ҳ.к.\n"
+        "• *Белгилар:* нима бўлмоқда ва қачон\n"
+        "• *Диагностика:* хато коди ва ўлчанган параметрлар"
+    ),
+    "uz_latin": (
+        "🤔 Iltimos, savolni aniqlashtiring:\n\n"
+        "• *Avtomobil:* marka, model, yil, dvigatel\n"
+        "• *Tizim:* dvigatel, AKPP, ABS, GBO va h.k.\n"
+        "• *Belgilar:* nima bo'lyapti va qachon\n"
+        "• *Diagnostika:* xato kodi va o'lchangan parametrlar"
+    ),
+    "ru_translit": (
+        "🤔 Pozhaluysta, utochnite vopros:\n\n"
+        "• *Avtomobil:* marka, model, god, dvigatel\n"
+        "• *Diagnostika:* kod oshibki i izmerennye parametry"
+    ),
+    "en": (
+        "🤔 Please clarify your question:\n\n"
+        "• *Vehicle:* make, model, year, engine\n"
+        "• *System:* engine, gearbox, ABS, LPG, etc.\n"
+        "• *Symptoms:* what happens and when\n"
+        "• *Diagnostics:* fault code and measured parameters"
+    ),
+    "uk": ("🤔 Будь ласка, уточніть питання:\n• Автомобіль, система, симптоми, код"),
+    "be": ("🤔 Калі ласка, удакладніце пытанне:\n• Аўтамабіль, сістэма, сімптомы"),
+    "de": ("🤔 Bitte präzisieren Sie Ihre Frage:\n• Fahrzeug, System, Symptome, Fehlercode"),
+    "kk": ("🤔 Сұрағыңызды нақтылаңыз:\n• Көлік, жүйе, белгілер, қате коды"),
+    "ky": ("🤔 Суроонузду тактаңыз:\n• Унаа, система, белгилер, каталык коду"),
+    "tg": ("🤔 Лутфан, саволатонро равшан кунед:\n• Мошин, система, аломатҳо"),
+    "tk": ("🤔 Soragyňyzy anyklaşdyryň:\n• Ulag, ulgam, alamatlar, näsazlyk kody"),
+}
+
+LISTEN_MSG: dict[str, str] = {
+    "ru": (
+        "Да, я Вас слушаю. Задайте вопрос и, по возможности, укажите марку, "
+        "модель, год, двигатель, систему и код неисправности. Повторно писать "
+        "«Уста» не нужно."
+    ),
+    "uz_cyrillic": (
+        "Ҳа, эшитаман. Саволингизни ёзинг. Имкон бўлса автомобил маркаси, "
+        "модели, йили, двигатели, тизими ва хато кодини кўрсатинг. «Уста» деб "
+        "қайта ёзиш шарт эмас."
+    ),
+    "uz_latin": (
+        "Ha, eshitaman. Savolingizni yozing. Imkon bo'lsa avtomobil markasi, "
+        "modeli, yili, dvigateli, tizimi va xato kodini ko'rsating. «Usta» deb "
+        "qayta yozish shart emas."
+    ),
+    "ru_translit": (
+        "Da, ya Vas slushayu. Zadayte vopros i ukazhite marku, model, god, "
+        "dvigatel, sistemu i kod oshibki. Povtorno pisat Usta ne nuzhno."
+    ),
+    "en": ("Yes, I'm listening. Please ask your question with vehicle make, model, year and fault code."),
+    "uk": ("Так, я Вас слухаю. Задайте питання і вкажіть марку, модель, рік, двигун."),
+    "be": ("Так, я Вас слухаю. Задайце пытанне і ўкажыце марку, мадэль, год, рухавік."),
+    "de": ("Ja, ich höre Ihnen zu. Stellen Sie Ihre Frage mit Marke, Modell, Baujahr."),
+    "kk": ("Иә, тыңдап тұрмын. Сұрағыңызды қойыңыз және көлік деректерін көрсетіңіз."),
+    "ky": ("Ооба, угуп жатам. Суроонузду бериңиз жана унаа маалыматтарын көрсөтүңүз."),
+    "tg": ("Бале, гӯш мекунам. Саволатонро диҳед ва маълумоти мошинро нишон диҳед."),
+    "tk": ("Hawa, diňleýärin. Soragy beriň we ulag maglumatlaryny görkeziň."),
+}
+
+UNAVAILABLE_MSG: dict[str, str] = {
+    "ru": (
+        "⏳ *Ответ по данному вопросу сейчас недоступен.*\n\n"
+        "Возможные причины:\n"
+        "• Вопрос не содержит достаточно данных для точного ответа\n"
+        "• Информация по данной теме отсутствует в базе знаний\n"
+        "• Временная недоступность внешних источников\n\n"
+        "Вопрос сохранён и поставлен в очередь на обработку.\n"
+        "База знаний постоянно пополняется.\n"
+        "Пожалуйста, обратитесь повторно через 24 часа\n"
+        "или уточните вопрос: укажите марку/модель авто, год, код ошибки."
+    ),
+    "uz_cyrillic": (
+        "⏳ *Ушбу савол бўйича жавоб ҳозирча мавжуд эмас.*\n\n"
+        "Сабаблар:\n"
+        "• Савол аниқ маълумот сақламайди\n"
+        "• Билимлар базасида маълумот йўқ\n"
+        "• Ташқи манбалар вақтинча мавжуд эмас\n\n"
+        "Савол сақланди. Билимлар базаси тўлдирилмоқда.\n"
+        "24 соатдан кейин қайта мурожаат қилинг\n"
+        "ёки саволни аниқлаштиринг: авто маркаси, йили, хато коди."
+    ),
+    "uz_latin": (
+        "⏳ *Ushbu savol bo'yicha javob hozircha mavjud emas.*\n\n"
+        "Sabablar:\n"
+        "• Savol aniq ma'lumot o'z ichiga olmaydi\n"
+        "• Bilimlar bazasida ma'lumot yo'q\n"
+        "• Tashqi manbalar vaqtincha mavjud emas\n\n"
+        "Savol saqlandi. Bilimlar bazasi to'ldirilmoqda.\n"
+        "24 soatdan keyin qayta murojaat qiling\n"
+        "yoki savolni aniqlashtiring: avto markasi, yili, xato kodi."
+    ),
+    "ru_translit": (
+        "⏳ Otvet po dannomu voprosu vremenno nedostupen.\n\n"
+        "Vopros sohranen. Obratites cherez 24 chasa."
+    ),
+    "en": (
+        "⏳ *No answer available for this question at the moment.*\n\n"
+        "Your question has been saved. Please try again in 24 hours "
+        "or clarify: vehicle make/model, year, fault code."
+    ),
+    "uk": (
+        "⏳ *Відповідь на це питання наразі недоступна.*\n\n"
+        "Питання збережено. Спробуйте через 24 години."
+    ),
+    "be": (
+        "⏳ *Адказ на гэтае пытанне зараз недаступны.*\n\n"
+        "Пытанне захавана. Паспрабуйце праз 24 гадзіны."
+    ),
+    "de": (
+        "⏳ *Für diese Frage ist momentan keine Antwort verfügbar.*\n\n"
+        "Ihre Frage wurde gespeichert. Bitte versuchen Sie es in 24 Stunden erneut."
+    ),
+    "kk": (
+        "⏳ *Бұл сұраққа жауап қазір қол жетімді емес.*\n\n"
+        "Сұрағыңыз сақталды. 24 сағаттан кейін қайталап көріңіз."
+    ),
+    "ky": (
+        "⏳ *Бул суроого учурда жооп жок.*\n\n"
+        "Суроонуз сакталды. 24 сааттан кийин кайра аракет кылыңыз."
+    ),
+    "tg": (
+        "⏳ *Дар айни замон ба ин савол ҷавоб мавҷуд нест.*\n\n"
+        "Саволи шумо сабт шуд. Лутфан баъди 24 соат такрор кунед."
+    ),
+    "tk": (
+        "⏳ *Bu sorag üçin häzirki wagtda jogap ýok.*\n\n"
+        "Soragyňyz saklandy. 24 sagatdan soň gaýtadan synanyşyň."
+    ),
+}
+
+
 def detect_language(text: str) -> str:
     """
     Определяет язык текста сообщения.
