@@ -1479,11 +1479,11 @@ def user_error_reason(error: Exception) -> str:
 #  МНОГОУРОВНЕВЫЙ AI: БЕСПЛАТНЫЕ МОДЕЛИ + ПЛАТНЫЙ FALLBACK
 #
 #  Порядок попыток:
-#  1. Groq API (бесплатный tier) — llama-3.3-70b-versatile
+#  1. Groq API (бесплатный tier) — qwen/qwen3.8-27b
 #     Сайт: console.groq.com → бесплатная регистрация → API Key
 #     Лимит бесплатного плана: ~14 400 запросов/день
 #
-#  2. Google Gemini API (бесплатный tier) — gemini-2.0-flash
+#  2. Google Gemini API (бесплатный tier) — gemini-3.8-flash
 #     Сайт: aistudio.google.com → Get API Key (бесплатно)
 #     Лимит: 15 запросов/минуту, 1500/день
 #
@@ -1521,7 +1521,7 @@ except ImportError:
 async def _call_groq(system: str, messages: list, question: str) -> str:
     """
     Вызов Groq API (бесплатный).
-    Модель: llama-3.3-70b-versatile — мощная, быстрая, бесплатная.
+    Модель: qwen/qwen3.8-27b — мощная, быстрая, бесплатная.
     Документация: console.groq.com/docs
     """
     if not GROQ_API_KEY:
@@ -1538,7 +1538,7 @@ async def _call_groq(system: str, messages: list, question: str) -> str:
             groq_messages.append({"role": m["role"], "content": m["content"]})
 
         payload = {
-            "model": "llama-3.3-70b-versatile",
+            "model": "qwen/qwen3.8-27b",
             "messages": groq_messages,
             "max_tokens": 1200,
             "temperature": 0.3,
@@ -1564,7 +1564,7 @@ async def _call_groq(system: str, messages: list, question: str) -> str:
 async def _call_gemini(system: str, messages: list, question: str) -> str:
     """
     Вызов Google Gemini API (бесплатный tier).
-    Модель: gemini-2.0-flash — быстрая, бесплатная (1500 запросов/день).
+    Модель: gemini-3.8-flash — быстрая, бесплатная (1500 запросов/день).
     Документация: aistudio.google.com
     """
     if not GEMINI_API_KEY:
@@ -1572,7 +1572,7 @@ async def _call_gemini(system: str, messages: list, question: str) -> str:
     try:
         url = (
             f"https://generativelanguage.googleapis.com/v1beta/models/"
-            f"gemini-2.0-flash:generateContent?key={GEMINI_API_KEY}"
+            f"gemini-3.8-flash:generateContent?key={GEMINI_API_KEY}"
         )
         # Gemini: system через systemInstruction, history через contents
         contents = []
@@ -1595,7 +1595,7 @@ async def _call_gemini(system: str, messages: list, question: str) -> str:
                         parts = candidates[0].get("content", {}).get("parts", [])
                         answer = " ".join(p.get("text", "") for p in parts).strip()
                         if answer:
-                            logger.info("AI ответ получен: Gemini (gemini-2.0-flash)")
+                            logger.info("AI ответ получен: Gemini (gemini-3.8-flash)")
                         return answer
                 else:
                     text = await resp.text()
@@ -1733,7 +1733,7 @@ async def _call_ai_with_fallback(
 
     Порядок:
     1. Groq (бесплатно, llama-3.3-70b) — если GROQ_API_KEY задан
-    2. Gemini (бесплатно, gemini-2.0-flash) — если GEMINI_API_KEY задан
+    2. Gemini (бесплатно, gemini-3.8-flash) — если GEMINI_API_KEY задан
     3. Claude Haiku (платно, fallback) — всегда доступен
 
     Возвращает первый непустой ответ.
@@ -1762,11 +1762,11 @@ async def _call_ai_with_fallback(
             logger.info("AI ответ: Kimi (moonshot-v1-8k)")
             return answer, "Kimi"
 
-    # 4. Gemini (бесплатно, gemini-2.0-flash)
+    # 4. Gemini (бесплатно, gemini-3.8-flash)
     if GEMINI_API_KEY:
         answer = await _call_gemini(system, messages, question)
         if answer:
-            logger.info("AI ответ: Gemini (gemini-2.0-flash)")
+            logger.info("AI ответ: Gemini (gemini-3.8-flash)")
             return answer, "Gemini"
 
     # 5. Claude Haiku (платный fallback — только если все остальные недоступны)
