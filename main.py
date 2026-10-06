@@ -68,15 +68,24 @@ def install_package(package: str, import_name: str = None) -> bool:
 
 async def check_ai_availability() -> list:
     """
-    Проверяет доступность всех настроенных AI API при старте бота.
+    Проверяет доступность всех AI API при старте бота.
 
     Выполняет минимальный тестовый запрос к каждому API.
     Результат выводится в консоль — список рабочих и нерабочих AI.
     Предупреждение если доступно менее 4 AI (недостаточно для
     объективного ответа: 3 соревнующихся + 1 арбитр).
 
+    Состав AI (порядок как в bot.py):
+        1. Groq       — qwen/qwen3.8-27b (основной)
+        2. Groq-2     — openai/gpt-oss-120b (второй слот)
+        3. DeepSeek   — deepseek-chat
+        4. Gemini     — gemini-3.5-flash-lite
+        5. OpenRouter — qwen/qwen-2.5-72b-instruct:free
+        6. HuggingFace — Llama-3.3-70B
+        7. Claude     — claude-haiku (арбитр/fallback)
+
     Возвращает:
-        Список имён доступных AI (например ['Groq', 'Gemini', 'Claude'])
+        Список имён доступных AI
     """
     try:
         import aiohttp as _aiohttp
@@ -95,7 +104,7 @@ async def check_ai_availability() -> list:
     logger.info("  Проверка доступности AI...")
 
     async def _test(name: str, coro) -> bool:
-        """Выполняет тест и логирует результат."""
+        """Выполняет тест одного AI и логирует результат."""
         try:
             result = await asyncio.wait_for(coro, timeout=15)
             ok = bool(result and len(result) > 0)
@@ -111,7 +120,7 @@ async def check_ai_availability() -> list:
 
     async with _aiohttp.ClientSession() as session:
 
-        # ── Groq ──────────────────────────────────────────────────────────────
+        # 1. Groq — основной слот (qwen/qwen3.8-27b)
         if GROQ_API_KEY:
             async def _groq():
                 async with session.post(
@@ -121,12 +130,28 @@ async def check_ai_availability() -> list:
                           "messages": [{"role": "user", "content": TEST}],
                           "max_tokens": 5},
                 ) as r:
-                    return (await r.json()).get("choices", [{}])[0].get(
-                        "message", {}).get("content", "") if r.status == 200 else ""
+                    return (await r.json()).get("choices",[{}])[0].get(
+                        "message",{}).get("content","") if r.status==200 else ""
             if await _test("Groq", _groq()):
                 available.append("Groq")
 
-        # ── DeepSeek ──────────────────────────────────────────────────────────
+        # 2. Groq-2 — второй слот (openai/gpt-oss-120b)
+        if GROQ_API_KEY:
+            async def _groq2():
+                async with session.post(
+                    "https://api.groq.com/openai/v1/chat/completions",
+                    headers={"Authorization": f"Bearer {GROQ_API_KEY}"},
+                    json={"model": "openai/gpt-oss-120b",
+                          "messages": [{"role": "user", "content": TEST}],
+                          "max_tokens": 5},
+                ) as r:
+                    d = await r.json()
+                    return d.get("choices",[{}])[0].get(
+                        "message",{}).get("content","") if r.status==200 else ""
+            if await _test("Groq-2", _groq2()):
+                available.append("Groq-2")
+
+        # 3. DeepSeek — deepseek-chat
         if DEEPSEEK_API_KEY:
             async def _deepseek():
                 async with session.post(
@@ -136,28 +161,29 @@ async def check_ai_availability() -> list:
                           "messages": [{"role": "user", "content": TEST}],
                           "max_tokens": 5},
                 ) as r:
-                    return (await r.json()).get("choices", [{}])[0].get(
-                        "message", {}).get("content", "") if r.status == 200 else ""
+                    return (await r.json()).get("choices",[{}])[0].get(
+                        "message",{}).get("content","") if r.status==200 else ""
             if await _test("DeepSeek", _deepseek()):
                 available.append("DeepSeek")
 
-        # ── Gemini ────────────────────────────────────────────────────────────
+        # 4. Gemini — gemini-3.5-flash-lite (стабильная бесплатная модель)
         if GEMINI_API_KEY:
             async def _gemini():
                 async with session.post(
                     f"https://generativelanguage.googleapis.com/v1beta"
-                    f"/models/gemini-3.8-flash:generateContent?key={GEMINI_API_KEY}",
+                    f"/models/gemini-3.5-flash-lite:generateContent"
+                    f"?key={GEMINI_API_KEY}",
                     json={"contents": [{"parts": [{"text": TEST}]}]},
                 ) as r:
                     data = await r.json()
-                    return (data.get("candidates", [{}])[0]
-                            .get("content", {})
-                            .get("parts", [{}])[0]
-                            .get("text", "")) if r.status == 200 else ""
+                    return (data.get("candidates",[{}])[0]
+                            .get("content",{})
+                            .get("parts",[{}])[0]
+                            .get("text","")) if r.status==200 else ""
             if await _test("Gemini", _gemini()):
                 available.append("Gemini")
 
-        # ── OpenRouter ────────────────────────────────────────────────────────
+        # 5. OpenRouter — qwen/qwen-2.5-72b-instruct:free
         if OPENROUTER_API_KEY:
             async def _openrouter():
                 async with session.post(
@@ -167,32 +193,31 @@ async def check_ai_availability() -> list:
                         "HTTP-Referer": "https://github.com/tolikaka/stag-knowledge-base",
                         "X-Title": "AI_Diag_UZ Bot",
                     },
-                    json={"model": "meta-llama/llama-3.3-70b-instruct:free",
+                    json={"model": "qwen/qwen-2.5-72b-instruct:free",
                           "messages": [{"role": "user", "content": TEST}],
                           "max_tokens": 5},
                 ) as r:
-                    return (await r.json()).get("choices", [{}])[0].get(
-                        "message", {}).get("content", "") if r.status == 200 else ""
+                    return (await r.json()).get("choices",[{}])[0].get(
+                        "message",{}).get("content","") if r.status==200 else ""
             if await _test("OpenRouter", _openrouter()):
                 available.append("OpenRouter")
 
-        # ── HuggingFace ───────────────────────────────────────────────────────
+        # 6. HuggingFace — Llama-3.3-70B через новый endpoint router.huggingface.co
         if HF_API_KEY:
             async def _hf():
                 async with session.post(
-                    "https://api-inference.huggingface.co/models/"
-                    "meta-llama/Llama-3.3-70B-Instruct/v1/chat/completions",
+                    "https://router.huggingface.co/v1/chat/completions",
                     headers={"Authorization": f"Bearer {HF_API_KEY}"},
                     json={"model": "meta-llama/Llama-3.3-70B-Instruct",
                           "messages": [{"role": "user", "content": TEST}],
                           "max_tokens": 5},
                 ) as r:
-                    return (await r.json()).get("choices", [{}])[0].get(
-                        "message", {}).get("content", "") if r.status == 200 else ""
+                    return (await r.json()).get("choices",[{}])[0].get(
+                        "message",{}).get("content","") if r.status==200 else ""
             if await _test("HuggingFace", _hf()):
                 available.append("HuggingFace")
 
-        # ── Claude Haiku (всегда проверяем — это арбитр/fallback) ─────────────
+        # 7. Claude Haiku — платный арбитр/fallback, всегда проверяем
         if ANTHROPIC_API_KEY:
             async def _claude():
                 async with session.post(
@@ -204,27 +229,32 @@ async def check_ai_availability() -> list:
                           "messages": [{"role": "user", "content": TEST}]},
                 ) as r:
                     data = await r.json()
-                    return data.get("content", [{}])[0].get(
-                        "text", "") if r.status == 200 else ""
+                    return data.get("content",[{}])[0].get(
+                        "text","") if r.status==200 else ""
             if await _test("Claude Haiku", _claude()):
                 available.append("Claude")
 
-    # ── Итог ──────────────────────────────────────────────────────────────────
+    # Итог
     total = len(available)
-    logger.info(f"  Доступно AI: {total} — {', '.join(available) if available else 'нет'}")
+    logger.info(
+        "  Доступно AI: %d — %s",
+        total,
+        ", ".join(available) if available else "нет"
+    )
 
     if total < 4:
         logger.warning(
-            f"  ⚠️ Доступно менее 4 AI ({total})! "
-            f"Для объективных ответов нужно минимум 4 "
-            f"(3 соревнующихся + 1 арбитр). "
-            f"Проверьте API ключи в config.py."
+            "  ⚠️ Доступно менее 4 AI (%d)! "
+            "Для объективных ответов нужно минимум 4 "
+            "(3 соревнующихся + 1 арбитр). "
+            "Проверьте API ключи в config.py.", total
         )
     else:
-        logger.info(f"  ✅ Достаточно AI для объективных ответов ({total} ≥ 4)")
+        logger.info(
+            "  ✅ Достаточно AI для объективных ответов (%d ≥ 4)", total
+        )
 
     return available
-
 
 
 def check_dependencies():

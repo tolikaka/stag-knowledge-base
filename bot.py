@@ -1485,7 +1485,7 @@ def user_error_reason(error: Exception) -> str:
 #     Сайт: console.groq.com → бесплатная регистрация → API Key
 #     Лимит бесплатного плана: ~14 400 запросов/день
 #
-#  2. Google Gemini API (бесплатный tier) — gemini-3.8-flash
+#  2. Google Gemini API (бесплатный tier) — gemini-3.5-flash-lite
 #     Сайт: aistudio.google.com → Get API Key (бесплатно)
 #     Лимит: 15 запросов/минуту, 1500/день
 #
@@ -1566,7 +1566,7 @@ async def _call_groq(system: str, messages: list, question: str) -> str:
 async def _call_gemini(system: str, messages: list, question: str) -> str:
     """
     Вызов Google Gemini API (бесплатный tier).
-    Модель: gemini-3.8-flash — быстрая, бесплатная (1500 запросов/день).
+    Модель: gemini-3.5-flash-lite — быстрая, бесплатная (1500 запросов/день).
     Документация: aistudio.google.com
     """
     if not GEMINI_API_KEY:
@@ -1574,7 +1574,7 @@ async def _call_gemini(system: str, messages: list, question: str) -> str:
     try:
         url = (
             f"https://generativelanguage.googleapis.com/v1beta/models/"
-            f"gemini-3.8-flash:generateContent?key={GEMINI_API_KEY}"
+            f"gemini-3.5-flash-lite:generateContent?key={GEMINI_API_KEY}"
         )
         # Gemini: system через systemInstruction, history через contents
         contents = []
@@ -1597,7 +1597,7 @@ async def _call_gemini(system: str, messages: list, question: str) -> str:
                         parts = candidates[0].get("content", {}).get("parts", [])
                         answer = " ".join(p.get("text", "") for p in parts).strip()
                         if answer:
-                            logger.info("AI ответ получен: Gemini (gemini-3.8-flash)")
+                            logger.info("AI ответ получен: Gemini (gemini-3.5-flash-lite)")
                         return answer
                 else:
                     text = await resp.text()
@@ -1725,6 +1725,71 @@ async def _call_kimi(system: str, messages: list, question: str) -> str:
         return ""
 
 
+async def _call_groq2(system: str, messages: list, question: str) -> str:
+    """
+    Второй слот Groq API с другой моделью.
+
+    Использует openai/gpt-oss-120b — модель GPT класса доступная
+    бесплатно через Groq. Служит резервом когда основной слот
+    Groq (qwen3.8-27b) недоступен или перегружен.
+
+    Тот же API ключ что и у _call_groq, другая модель.
+    Документация: console.groq.com/docs
+
+    Аргументы:
+        system   — системный промпт с инструкциями языка и роли
+        messages — история диалога в формате OpenAI
+        question — текущий вопрос пользователя
+
+    Возвращает:
+        Текст ответа или пустую строку при ошибке
+    """
+    if not GROQ_API_KEY:
+        return ""
+    try:
+        url = "https://api.groq.com/openai/v1/chat/completions"
+        headers = {
+            "Authorization": f"Bearer {GROQ_API_KEY}",
+            "Content-Type": "application/json",
+        }
+        # Формируем сообщения в формате OpenAI
+        groq2_messages = [{"role": "system", "content": system}]
+        groq2_messages += [
+            {"role": m["role"], "content": m["content"]}
+            for m in messages[-6:]
+            if m.get("content")
+        ]
+        groq2_messages.append({"role": "user", "content": question})
+
+        payload = {
+            "model": "openai/gpt-oss-120b",  # Второй бесплатный слот Groq
+            "messages": groq2_messages,
+            "max_tokens": 1200,
+            "temperature": 0.7,
+        }
+
+        timeout = aiohttp.ClientTimeout(total=25)
+        async with aiohttp.ClientSession(timeout=timeout) as session:
+            async with session.post(url, headers=headers, json=payload) as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    answer = (data.get("choices", [{}])[0]
+                              .get("message", {})
+                              .get("content", "").strip())
+                    if answer:
+                        logger.info("AI ответ получен: Groq-2 (openai/gpt-oss-120b)")
+                    return answer
+                else:
+                    text = await resp.text()
+                    logger.warning(
+                        f"Groq-2 API error {resp.status}: {text[:200]}"
+                    )
+                    return ""
+    except Exception as e:
+        logger.warning(f"Groq-2 недоступен: {e}")
+        return ""
+
+
 async def _call_openrouter(system: str, messages: list, question: str) -> str:
     """
     Вызов OpenRouter API — агрегатор бесплатных AI моделей.
@@ -1765,7 +1830,7 @@ async def _call_openrouter(system: str, messages: list, question: str) -> str:
         or_messages.append({"role": "user", "content": question})
 
         payload = {
-            "model": "meta-llama/llama-3.3-70b-instruct:free",
+            "model": "qwen/qwen-2.5-72b-instruct:free",  # Стабильно бесплатная модель на OpenRouter
             "messages": or_messages,
             "max_tokens": 1200,
             "temperature": 0.7,
@@ -1811,7 +1876,7 @@ async def _call_huggingface(system: str, messages: list, question: str) -> str:
         return ""
     try:
         # HuggingFace Inference API использует OpenAI-совместимый формат
-        url = "https://api-inference.huggingface.co/models/meta-llama/Llama-3.3-70B-Instruct/v1/chat/completions"
+        url = "https://router.huggingface.co/v1/chat/completions"  # Новый рекомендованный endpoint HF
         headers = {
             "Authorization": f"Bearer {HF_API_KEY}",
             "Content-Type": "application/json",
@@ -1865,7 +1930,7 @@ async def _call_ai_with_fallback(
 
     Порядок:
     1. Groq (бесплатно, llama-3.3-70b) — если GROQ_API_KEY задан
-    2. Gemini (бесплатно, gemini-3.8-flash) — если GEMINI_API_KEY задан
+    2. Gemini (бесплатно, gemini-3.5-flash-lite) — если GEMINI_API_KEY задан
     3. Claude Haiku (платно, fallback) — всегда доступен
 
     Возвращает первый непустой ответ.
@@ -1880,42 +1945,49 @@ async def _call_ai_with_fallback(
             logger.info("AI ответ: Groq (llama-3.3-70b)")
             return answer, "Groq"
 
-    # 2. DeepSeek (почти бесплатно, отличен для технических авто-вопросов)
+    # 2. Groq-2 (второй слот Groq, другая модель — openai/gpt-oss-120b)
+    answer = await _call_groq2(system, messages, question)
+    if answer:
+        logger.info("AI ответ: Groq-2 (gpt-oss-120b)")
+        return answer, "Groq-2"
+
+    # 3. DeepSeek (почти бесплатно, отличен для технических авто-вопросов)
     if DEEPSEEK_API_KEY:
         answer = await _call_deepseek(system, messages, question)
         if answer:
             logger.info("AI ответ: DeepSeek (deepseek-chat)")
             return answer, "DeepSeek"
 
-    # 3. Kimi / Moonshot (бесплатно, лучший для китайских авто и оборудования)
+    # 4. Kimi / Moonshot (бесплатно, лучший для китайских авто и оборудования)
     if KIMI_API_KEY:
         answer = await _call_kimi(system, messages, question)
         if answer:
             logger.info("AI ответ: Kimi (moonshot-v1-8k)")
             return answer, "Kimi"
 
-    # 4. Gemini (бесплатно, gemini-3.8-flash)
+    # 5. Gemini (бесплатно, gemini-3.5-flash-lite)
     if GEMINI_API_KEY:
         answer = await _call_gemini(system, messages, question)
         if answer:
-            logger.info("AI ответ: Gemini (gemini-3.8-flash)")
+            logger.info("AI ответ: Gemini (gemini-3.5-flash-lite)")
             return answer, "Gemini"
 
-    # 5. OpenRouter (агрегатор бесплатных моделей)
+    # 6. OpenRouter (агрегатор — бесплатные модели нестабильны,
+    #    могут стать платными без предупреждения)
     if OPENROUTER_API_KEY:
         answer = await _call_openrouter(system, messages, question)
         if answer:
-            logger.info("AI ответ: OpenRouter (llama-3.3-70b:free)")
+            logger.info("AI ответ: OpenRouter (qwen-2.5-72b:free)")
             return answer, "OpenRouter"
 
-    # 6. HuggingFace (бесплатно, ~1000 запросов/день)
+    # 7. HuggingFace (бесплатно, ~1000 запросов/день)
     if HF_API_KEY:
         answer = await _call_huggingface(system, messages, question)
         if answer:
             logger.info("AI ответ: HuggingFace (Llama-3.3-70B)")
             return answer, "HuggingFace"
 
-    # 7. Claude Haiku (платный fallback — только если все остальные недоступны)
+    # 8. Claude Haiku (платный fallback/арбитр) (платный fallback — только если все остальные недоступны)
     answer = await _call_claude_haiku(system, messages, question)
     logger.info("AI ответ: Claude Haiku (fallback)")
     return answer, "Claude"
