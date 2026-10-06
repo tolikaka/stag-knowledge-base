@@ -1,4 +1,4 @@
-# FILE: main.py | VERSION: 1.1.0 | DATE: 2026-10-04
+# FILE: main.py | VERSION: 1.2.0 | DATE: 2026-10-04
 """
 main.py — Точка запуска AI_Diag_UZ Bot
 ========================================
@@ -64,6 +64,167 @@ def install_package(package: str, import_name: str = None) -> bool:
     except Exception as e:
         logger.warning("  %s: %s", package, e)
     return False
+
+
+async def check_ai_availability() -> list:
+    """
+    Проверяет доступность всех настроенных AI API при старте бота.
+
+    Выполняет минимальный тестовый запрос к каждому API.
+    Результат выводится в консоль — список рабочих и нерабочих AI.
+    Предупреждение если доступно менее 4 AI (недостаточно для
+    объективного ответа: 3 соревнующихся + 1 арбитр).
+
+    Возвращает:
+        Список имён доступных AI (например ['Groq', 'Gemini', 'Claude'])
+    """
+    try:
+        import aiohttp as _aiohttp
+        from config import (
+            GROQ_API_KEY, DEEPSEEK_API_KEY, GEMINI_API_KEY,
+            ANTHROPIC_API_KEY, OPENROUTER_API_KEY, HF_API_KEY,
+        )
+    except ImportError:
+        logger.warning("  Проверка AI: не удалось импортировать зависимости")
+        return []
+
+    # Минимальный тестовый запрос — быстро и не тратит токены
+    TEST = "Reply with one word: OK"
+    available = []
+
+    logger.info("  Проверка доступности AI...")
+
+    async def _test(name: str, coro) -> bool:
+        """Выполняет тест и логирует результат."""
+        try:
+            result = await asyncio.wait_for(coro, timeout=15)
+            ok = bool(result and len(result) > 0)
+            icon = "✅" if ok else "❌"
+            logger.info(f"  {icon} {name:<15} {'доступен' if ok else 'нет ответа'}")
+            return ok
+        except asyncio.TimeoutError:
+            logger.info(f"  ❌ {name:<15} таймаут (>15 сек)")
+            return False
+        except Exception as e:
+            logger.info(f"  ❌ {name:<15} ошибка: {e}")
+            return False
+
+    async with _aiohttp.ClientSession() as session:
+
+        # ── Groq ──────────────────────────────────────────────────────────────
+        if GROQ_API_KEY:
+            async def _groq():
+                async with session.post(
+                    "https://api.groq.com/openai/v1/chat/completions",
+                    headers={"Authorization": f"Bearer {GROQ_API_KEY}"},
+                    json={"model": "qwen/qwen3.8-27b",
+                          "messages": [{"role": "user", "content": TEST}],
+                          "max_tokens": 5},
+                ) as r:
+                    return (await r.json()).get("choices", [{}])[0].get(
+                        "message", {}).get("content", "") if r.status == 200 else ""
+            if await _test("Groq", _groq()):
+                available.append("Groq")
+
+        # ── DeepSeek ──────────────────────────────────────────────────────────
+        if DEEPSEEK_API_KEY:
+            async def _deepseek():
+                async with session.post(
+                    "https://api.deepseek.com/chat/completions",
+                    headers={"Authorization": f"Bearer {DEEPSEEK_API_KEY}"},
+                    json={"model": "deepseek-chat",
+                          "messages": [{"role": "user", "content": TEST}],
+                          "max_tokens": 5},
+                ) as r:
+                    return (await r.json()).get("choices", [{}])[0].get(
+                        "message", {}).get("content", "") if r.status == 200 else ""
+            if await _test("DeepSeek", _deepseek()):
+                available.append("DeepSeek")
+
+        # ── Gemini ────────────────────────────────────────────────────────────
+        if GEMINI_API_KEY:
+            async def _gemini():
+                async with session.post(
+                    f"https://generativelanguage.googleapis.com/v1beta"
+                    f"/models/gemini-3.8-flash:generateContent?key={GEMINI_API_KEY}",
+                    json={"contents": [{"parts": [{"text": TEST}]}]},
+                ) as r:
+                    data = await r.json()
+                    return (data.get("candidates", [{}])[0]
+                            .get("content", {})
+                            .get("parts", [{}])[0]
+                            .get("text", "")) if r.status == 200 else ""
+            if await _test("Gemini", _gemini()):
+                available.append("Gemini")
+
+        # ── OpenRouter ────────────────────────────────────────────────────────
+        if OPENROUTER_API_KEY:
+            async def _openrouter():
+                async with session.post(
+                    "https://openrouter.ai/api/v1/chat/completions",
+                    headers={
+                        "Authorization": f"Bearer {OPENROUTER_API_KEY}",
+                        "HTTP-Referer": "https://github.com/tolikaka/stag-knowledge-base",
+                        "X-Title": "AI_Diag_UZ Bot",
+                    },
+                    json={"model": "meta-llama/llama-3.3-70b-instruct:free",
+                          "messages": [{"role": "user", "content": TEST}],
+                          "max_tokens": 5},
+                ) as r:
+                    return (await r.json()).get("choices", [{}])[0].get(
+                        "message", {}).get("content", "") if r.status == 200 else ""
+            if await _test("OpenRouter", _openrouter()):
+                available.append("OpenRouter")
+
+        # ── HuggingFace ───────────────────────────────────────────────────────
+        if HF_API_KEY:
+            async def _hf():
+                async with session.post(
+                    "https://api-inference.huggingface.co/models/"
+                    "meta-llama/Llama-3.3-70B-Instruct/v1/chat/completions",
+                    headers={"Authorization": f"Bearer {HF_API_KEY}"},
+                    json={"model": "meta-llama/Llama-3.3-70B-Instruct",
+                          "messages": [{"role": "user", "content": TEST}],
+                          "max_tokens": 5},
+                ) as r:
+                    return (await r.json()).get("choices", [{}])[0].get(
+                        "message", {}).get("content", "") if r.status == 200 else ""
+            if await _test("HuggingFace", _hf()):
+                available.append("HuggingFace")
+
+        # ── Claude Haiku (всегда проверяем — это арбитр/fallback) ─────────────
+        if ANTHROPIC_API_KEY:
+            async def _claude():
+                async with session.post(
+                    "https://api.anthropic.com/v1/messages",
+                    headers={"x-api-key": ANTHROPIC_API_KEY,
+                             "anthropic-version": "2023-06-01"},
+                    json={"model": "claude-haiku-4-5-20251001",
+                          "max_tokens": 5,
+                          "messages": [{"role": "user", "content": TEST}]},
+                ) as r:
+                    data = await r.json()
+                    return data.get("content", [{}])[0].get(
+                        "text", "") if r.status == 200 else ""
+            if await _test("Claude Haiku", _claude()):
+                available.append("Claude")
+
+    # ── Итог ──────────────────────────────────────────────────────────────────
+    total = len(available)
+    logger.info(f"  Доступно AI: {total} — {', '.join(available) if available else 'нет'}")
+
+    if total < 4:
+        logger.warning(
+            f"  ⚠️ Доступно менее 4 AI ({total})! "
+            f"Для объективных ответов нужно минимум 4 "
+            f"(3 соревнующихся + 1 арбитр). "
+            f"Проверьте API ключи в config.py."
+        )
+    else:
+        logger.info(f"  ✅ Достаточно AI для объективных ответов ({total} ≥ 4)")
+
+    return available
+
 
 
 def check_dependencies():
@@ -139,6 +300,16 @@ def main():
 
     # Зависимости
     check_dependencies()
+
+    # Проверяем доступность AI API при старте (G7)
+    # Запускаем во временном event loop до создания основного
+    try:
+        _ai_loop = asyncio.new_event_loop()
+        available_ai = _ai_loop.run_until_complete(check_ai_availability())
+        _ai_loop.close()
+    except Exception as e:
+        logger.warning("  Проверка AI не выполнена: %s", e)
+        available_ai = []
 
     # Создаём чистый event loop для бота
     loop = asyncio.new_event_loop()

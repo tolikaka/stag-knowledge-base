@@ -123,6 +123,8 @@ try:
         TELEGRAM_CHANNEL_ID,   # Старый параметр одной группы (совместимость)
         TELEGRAM_ADMIN_IDS,    # Список Telegram ID администраторов
         ANTHROPIC_API_KEY,     # Ключ API для Claude AI
+        OPENROUTER_API_KEY,    # Ключ API для OpenRouter (агрегатор бесплатных моделей)
+        HF_API_KEY,            # Ключ API для Hugging Face Inference API
         SYNC_INTERVAL_MINUTES, # Интервал синхронизации с GitHub (в минутах)
     )
     try:
@@ -1723,6 +1725,136 @@ async def _call_kimi(system: str, messages: list, question: str) -> str:
         return ""
 
 
+async def _call_openrouter(system: str, messages: list, question: str) -> str:
+    """
+    Вызов OpenRouter API — агрегатор бесплатных AI моделей.
+
+    OpenRouter предоставляет единый API для множества моделей.
+    Используем бесплатную модель meta-llama/llama-3.3-70b-instruct:free.
+    Суффикс :free означает полностью бесплатный доступ без карты.
+
+    Документация: openrouter.ai/docs
+    Бесплатные модели: openrouter.ai/models?q=free
+
+    Аргументы:
+        system   — системный промпт с инструкциями языка и роли
+        messages — история диалога в формате OpenAI
+        question — текущий вопрос пользователя
+
+    Возвращает:
+        Текст ответа или пустую строку при ошибке
+    """
+    if not OPENROUTER_API_KEY:
+        return ""
+    try:
+        url = "https://openrouter.ai/api/v1/chat/completions"
+        headers = {
+            "Authorization": f"Bearer {OPENROUTER_API_KEY}",
+            "Content-Type": "application/json",
+            # OpenRouter требует эти заголовки для идентификации приложения
+            "HTTP-Referer": "https://github.com/tolikaka/stag-knowledge-base",
+            "X-Title": "AI_Diag_UZ Bot",
+        }
+        # OpenRouter использует OpenAI-совместимый формат
+        or_messages = [{"role": "system", "content": system}]
+        or_messages += [
+            {"role": m["role"], "content": m["content"]}
+            for m in messages[-6:]  # последние 6 сообщений для контекста
+            if m.get("content")
+        ]
+        or_messages.append({"role": "user", "content": question})
+
+        payload = {
+            "model": "meta-llama/llama-3.3-70b-instruct:free",
+            "messages": or_messages,
+            "max_tokens": 1200,
+            "temperature": 0.7,
+        }
+
+        timeout = aiohttp.ClientTimeout(total=25)
+        async with aiohttp.ClientSession(timeout=timeout) as session:
+            async with session.post(url, headers=headers, json=payload) as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    answer = data["choices"][0]["message"]["content"].strip()
+                    if answer:
+                        logger.info("AI ответ получен: OpenRouter (llama-3.3-70b:free)")
+                    return answer
+                else:
+                    text = await resp.text()
+                    logger.warning(f"OpenRouter API error {resp.status}: {text[:200]}")
+                    return ""
+    except Exception as e:
+        logger.warning(f"OpenRouter недоступен: {e}")
+        return ""
+
+
+async def _call_huggingface(system: str, messages: list, question: str) -> str:
+    """
+    Вызов Hugging Face Inference API.
+
+    HuggingFace предоставляет ~1000 бесплатных запросов в день.
+    Используем Meta Llama-3.3-70B — одну из лучших открытых моделей.
+
+    Документация: huggingface.co/docs/api-inference
+    Модель: meta-llama/Llama-3.3-70B-Instruct
+
+    Аргументы:
+        system   — системный промпт с инструкциями языка и роли
+        messages — история диалога в формате OpenAI
+        question — текущий вопрос пользователя
+
+    Возвращает:
+        Текст ответа или пустую строку при ошибке
+    """
+    if not HF_API_KEY:
+        return ""
+    try:
+        # HuggingFace Inference API использует OpenAI-совместимый формат
+        url = "https://api-inference.huggingface.co/models/meta-llama/Llama-3.3-70B-Instruct/v1/chat/completions"
+        headers = {
+            "Authorization": f"Bearer {HF_API_KEY}",
+            "Content-Type": "application/json",
+        }
+        # Формируем сообщения в формате OpenAI
+        hf_messages = [{"role": "system", "content": system}]
+        hf_messages += [
+            {"role": m["role"], "content": m["content"]}
+            for m in messages[-6:]
+            if m.get("content")
+        ]
+        hf_messages.append({"role": "user", "content": question})
+
+        payload = {
+            "model": "meta-llama/Llama-3.3-70B-Instruct",
+            "messages": hf_messages,
+            "max_tokens": 1200,
+            "temperature": 0.7,
+        }
+
+        timeout = aiohttp.ClientTimeout(total=30)
+        async with aiohttp.ClientSession(timeout=timeout) as session:
+            async with session.post(url, headers=headers, json=payload) as resp:
+                if resp.status == 200:
+                    data = await resp.json()
+                    answer = data["choices"][0]["message"]["content"].strip()
+                    if answer:
+                        logger.info("AI ответ получен: HuggingFace (Llama-3.3-70B)")
+                    return answer
+                elif resp.status == 503:
+                    # 503 = модель загружается (cold start), не ошибка API
+                    logger.warning("HuggingFace: модель загружается (503), пропускаем")
+                    return ""
+                else:
+                    text = await resp.text()
+                    logger.warning(f"HuggingFace API error {resp.status}: {text[:200]}")
+                    return ""
+    except Exception as e:
+        logger.warning(f"HuggingFace недоступен: {e}")
+        return ""
+
+
+
 async def _call_ai_with_fallback(
     system: str,
     messages: list,
@@ -1769,7 +1901,21 @@ async def _call_ai_with_fallback(
             logger.info("AI ответ: Gemini (gemini-3.8-flash)")
             return answer, "Gemini"
 
-    # 5. Claude Haiku (платный fallback — только если все остальные недоступны)
+    # 5. OpenRouter (агрегатор бесплатных моделей)
+    if OPENROUTER_API_KEY:
+        answer = await _call_openrouter(system, messages, question)
+        if answer:
+            logger.info("AI ответ: OpenRouter (llama-3.3-70b:free)")
+            return answer, "OpenRouter"
+
+    # 6. HuggingFace (бесплатно, ~1000 запросов/день)
+    if HF_API_KEY:
+        answer = await _call_huggingface(system, messages, question)
+        if answer:
+            logger.info("AI ответ: HuggingFace (Llama-3.3-70B)")
+            return answer, "HuggingFace"
+
+    # 7. Claude Haiku (платный fallback — только если все остальные недоступны)
     answer = await _call_claude_haiku(system, messages, question)
     logger.info("AI ответ: Claude Haiku (fallback)")
     return answer, "Claude"
