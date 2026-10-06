@@ -3896,6 +3896,75 @@ async def handle_satisfaction_callback(
         f"| user_id={user_id} | вопрос='{question[:50]}'"
     )
 
+    # ── Блокировка кнопок после нажатия ──────────────────────────────────────
+    # Сразу заменяем кнопки текстом вида:
+    # "Администратор отметил: ✅ Спасибо"
+    # "Пользователь отметил: ❌ Не верно"
+    # Это предотвращает повторное нажатие любой из кнопок.
+
+    # Название роли на языке вопроса
+    ROLE_LABEL = {
+        "ru":          ("Администратор", "Пользователь"),
+        "uz_latin":    ("Administrator", "Foydalanuvchi"),
+        "uz_cyrillic": ("Администратор", "Фойдаланувчи"),
+        "ru_translit": ("Administrator", "Polzovatel"),
+        "en":          ("Administrator", "User"),
+        "uk":          ("Адміністратор", "Користувач"),
+        "be":          ("Адміністратар", "Карыстальнік"),
+        "de":          ("Administrator",  "Benutzer"),
+        "kk":          ("Әкімші",        "Пайдаланушы"),
+        "ky":          ("Администратор", "Колдонуучу"),
+        "tg":          ("Маъмур",        "Корбар"),
+        "tk":          ("Administrator", "Ulanyjy"),
+        "pl":          ("Administrator", "Użytkownik"),
+    }
+
+    # Название нажатой кнопки на языке вопроса
+    BTN_LABEL = {
+        "sat_ok": {
+            "ru": "✅ Спасибо", "uz_latin": "✅ Rahmat",
+            "uz_cyrillic": "✅ Rahmat", "ru_translit": "✅ Spasibo",
+            "en": "✅ Thank you", "uk": "✅ Дякую",
+            "be": "✅ Дзякуй", "de": "✅ Danke",
+            "kk": "✅ Рақмет", "ky": "✅ Рахмат",
+            "tg": "✅ Ташаккур", "tk": "✅ Sag boluň",
+            "pl": "✅ Dziękuję",
+        },
+        "sat_wrong": {
+            "ru": "❌ Не верно", "uz_latin": "❌ Noto'g'ri",
+            "uz_cyrillic": "❌ Noto'g'ri", "ru_translit": "❌ Ne verno",
+            "en": "❌ Incorrect", "uk": "❌ Невірно",
+            "be": "❌ Няверна", "de": "❌ Falsch",
+            "kk": "❌ Қате", "ky": "❌ Туура эмес",
+            "tg": "❌ Нодуруст", "tk": "❌ Nädogry",
+            "pl": "❌ Nieprawidłowo",
+        },
+        "sat_clarify": {
+            "ru": "🔧 Уточнить", "uz_latin": "🔧 Aniqlash",
+            "uz_cyrillic": "🔧 Aniqlash", "ru_translit": "🔧 Utochnit",
+            "en": "🔧 Clarify", "uk": "🔧 Уточнити",
+            "be": "🔧 Удакладніць", "de": "🔧 Klären",
+            "kk": "🔧 Нақтылау", "ky": "🔧 Тактоо",
+            "tg": "🔧 Равшан кунед", "tk": "🔧 Anyklamak",
+            "pl": "🔧 Doprecyzuj",
+        },
+    }
+
+    # Формируем текст замены кнопок
+    _role_labels = ROLE_LABEL.get(lang, ROLE_LABEL["ru"])
+    _role_str    = _role_labels[0] if is_admin_user else _role_labels[1]
+    _btn_labels  = BTN_LABEL.get(action, {})
+    _btn_str     = _btn_labels.get(lang, _btn_labels.get("ru", action))
+    _block_text  = f"{_role_str} отметил: {_btn_str}"
+
+    # Убираем кнопки — заменяем reply_markup на None и добавляем текст
+    try:
+        await query.edit_message_reply_markup(reply_markup=None)
+        await query.message.reply_text(_block_text)
+    except Exception as _e:
+        logger.debug("Не удалось убрать кнопки: %s", _e)
+
+
     if action == "sat_ok":
         # ── "Спасибо" ─────────────────────────────────────────────────────────
         # Пользователь:      → вопрос+ответ добавляются в "На проверке" (pending)

@@ -126,6 +126,26 @@
       "created_at": "2026-10-04T08:59:15.039889+00:00",
       "updated_at": "2026-10-04T08:59:15.039889+00:00",
       "usage_count": 0
+    },
+    {
+      "id": "kb_05f1d4bf",
+      "category": "Автодиагностика - Общее",
+      "question": "Cobaltga qaysi biri gas injector urnatish kulayroq",
+      "keywords": [
+        "cobaltga",
+        "qaysi",
+        "biri",
+        "gas",
+        "injector",
+        "urnatish",
+        "kulayroq"
+      ],
+      "answer": "Sizning savolingizga aniq javob berish uchun quyidagi ma'lumotlarni aniqlashtirishim kerak, chunki \"Cobalt\" (Chevrolet) modellari turli xil dvigatellarga ega bo'lib, ularning injektorlari (yoki gaz injektorlari) o'zaro almashtirilmaydi:\n\n1. **Qaysi yil va qaysi dvigatel?** (Masalan: 1.5L, 1.6L, 1.8L, 2.0L, 2.4L yoki 2.5L).\n2. **Qaysi avlod?** (L200, L300 yoki L400).\n3. **Qaysi GBO tizimi o'rnatilgan?** (AC STAG, BRC, Lovato, Prins va h.k.). Gaz injektorlari odatda GBO markasiga qarab tanlanadi, lekin ular benzin injektorlarining o'rniga o'tkaziladi.\n\n**Umumiy ma'lumot:**\nAgar siz **benzin injektorlarini** almashtirayotgan bo'lsangiz, ular dvigatel hajmiga qarab farq qiladi.\nAgar siz **gaz injektorlarini** tanlayotgan bo'lsangiz, ular GBO markasiga (masalan, AC STAG) qarab tanlanadi va odatda dvigatelning silindr soniga (4 silindr) mos keladi.\n\nIltimos, yuqoridagi ma'lumotlarni yuboring, to'g'ri maslahat berishim mumkin bo'lsin.",
+      "source": "admin_feedback",
+      "scope": "auto",
+      "created_at": "2026-10-06T21:37:01.055957+00:00",
+      "updated_at": "2026-10-06T21:37:01.055957+00:00",
+      "usage_count": 0
     }
   ],
   "categories": [
@@ -257,6 +277,52 @@
       "message_text": "где находится серийный код блока управления  Stag-200 (другой вариант, предыдущий ответ не подошёл)",
       "chat_id": -1004368283151,
       "timestamp": "2026-10-05T20:44:04.176891+00:00",
+      "status": "new"
+    },
+    {
+      "id": "pend_09b42cf5",
+      "user_id": 39425955,
+      "username": "AnatoliyAndrianov",
+      "message_text": "какой редуктор лучше поставить на Onix",
+      "chat_id": -1004368283151,
+      "timestamp": "2026-10-06T21:31:28.369072+00:00",
+      "status": "admin_needs_clarify",
+      "ai_answer": "Для точного подбора редуктора на Chevrolet Onix необходимо уточнить параметры вашего автомобиля и текущей установки ГБО.\n\nПожалуйста, ответьте на следующие вопросы:\n1. Какой двигатель установлен (объем, код, например, 1.4 или 1.6)?\n2. Какое поколение ГБО установлено (например, STAG 300, 400, 500, 600 или другое)?\n3. Какой тип редуктора стоит сейчас (мембранный, роторный, двухступенчатый)?\n4. Есть ли проблемы с текущим редуктором (потеря давления, вибрации, ошибки)?\n\n**Важно:**\n*   Редуктор подбирается строго под конкретную модель ЭБУ и тип двигателя.\n*   Для легковых автомобилей обычно используются одноступенчатые мембранные редукторы (например, серии STAG R01), но точная совместимость зависит от производительности двигателя и требований к давлению.\n*   Не устанавливайте редуктор «на глаз» — это может привести к неправильной дозировке газа, повышенному расходу топлива или повреждению двигателя.\n\nЖду ваших уточнений для рекомендации."
+    },
+    {
+      "id": "pend_2b102d21",
+      "user_id": 39425955,
+      "username": "AnatoliyAndrianov",
+      "message_text": "[ТРЕБУЕТ УТОЧНЕНИЯ - ADMIN] какой редуктор лучше поставить на Onix",
+      "chat_id": -1004368283151,
+      "timestamp": "2026-10-06T21:32:05.332222+00:00",
+      "status": "new"
+    },
+    {
+      "id": "pend_c1b9a86a",
+      "user_id": 39425955,
+      "username": "AnatoliyAndrianov",
+      "message_text": "Cobaltga qaysi biri gas injector urnatish kulayroq",
+      "chat_id": -1004368283151,
+      "timestamp": "2026-10-06T21:36:27.001139+00:00",
+      "status": "new"
+    },
+    {
+      "id": "pend_cfc50710",
+      "user_id": 39425955,
+      "username": "AnatoliyAndrianov",
+      "message_text": "is it possible to change D shift to R shift when you drive  car forward without stop the car",
+      "chat_id": -1004368283151,
+      "timestamp": "2026-10-06T21:39:52.537043+00:00",
+      "status": "new"
+    },
+    {
+      "id": "pend_873fb5fd",
+      "user_id": 39425955,
+      "username": "AnatoliyAndrianov",
+      "message_text": "is it possible to change D shift to R shift when you drive  car forward without stop the car (другой вариант, предыдущий ответ не подошёл)",
+      "chat_id": -1004368283151,
+      "timestamp": "2026-10-06T21:40:14.287037+00:00",
       "status": "new"
     }
   ]
