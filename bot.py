@@ -4019,9 +4019,18 @@ async def handle_satisfaction_callback(
                 )
                 THANKS_ADMIN = {
                     "ru":          "✅ Ответ добавлен в базу знаний.",
-                    "uz_latin":    "✅ Javob bilimlar bazasiga qo'shildi. Rahmat!",
-                    "uz_cyrillic": "✅ Жавоб билимлар базасига қўшилди. Раҳмат!",
-                    "ru_translit": "✅ Otvet dobavlen v bazu. Spasibo!",
+                    "uz_latin":    "✅ Javob bilimlar bazasiga qo'shildi.",
+                    "uz_cyrillic": "✅ Жавоб билимлар базасига қўшилди.",
+                    "ru_translit": "✅ Otvet dobavlen v bazu znanii.",
+                    "en":          "✅ Answer added to the knowledge base.",
+                    "uk":          "✅ Відповідь додано до бази знань.",
+                    "be":          "✅ Адказ дададзены ў базу ведаў.",
+                    "de":          "✅ Antwort zur Wissensdatenbank hinzugefügt.",
+                    "kk":          "✅ Жауап білім қорына қосылды.",
+                    "ky":          "✅ Жооп билим базасына кошулду.",
+                    "tg":          "✅ Ҷавоб ба пойгоҳи дониш илова шуд.",
+                    "tk":          "✅ Jogap bilim bazasyna goşuldy.",
+                    "pl":          "✅ Odpowiedź dodana do bazy wiedzy.",
                 }
                 await query.edit_message_text(
                     THANKS_ADMIN.get(lang, THANKS_ADMIN["ru"])
@@ -4048,10 +4057,19 @@ async def handle_satisfaction_callback(
                         break
                 await kb_manager._save_local()
                 THANKS_USER = {
-                    "ru":          "✅ Рад помочь! Ответ отправлен на проверку администратору.",
-                    "uz_latin":    "✅ Yordam bera olganimdan xursandman! Javob administratorga yuborildi.",
-                    "uz_cyrillic": "✅ Ёрдам бера олганимдан хурсандман! Жавоб администраторга юборилди.",
+                    "ru":          "✅ Рад помочь! Ответ отправлен на проверку.",
+                    "uz_latin":    "✅ Yordam bera olganimdan xursandman! Javob tekshiruvga yuborildi.",
+                    "uz_cyrillic": "✅ Ёрдам бера олганимдан хурсандман! Жавоб текширувга юборилди.",
                     "ru_translit": "✅ Rad pomoch! Otvet otpravlen na proverku.",
+                    "en":          "✅ Glad to help! Answer sent for review.",
+                    "uk":          "✅ Радий допомогти! Відповідь надіслано на перевірку.",
+                    "be":          "✅ Рады дапамагчы! Адказ адпраўлены на праверку.",
+                    "de":          "✅ Gern geholfen! Antwort zur Überprüfung gesendet.",
+                    "kk":          "✅ Көмектесе алғаныма қуаныштымын! Жауап тексеруге жіберілді.",
+                    "ky":          "✅ Жардам бере алгандыгыма кубанычтамын! Жооп текшерүүгө жөнөтүлдү.",
+                    "tg":          "✅ Хурсандам, ки кӯмак кардам! Ҷавоб барои баррасӣ фиристода шуд.",
+                    "tk":          "✅ Kömek edip bilenime şatdyryn! Jogap barlamaga iberildi.",
+                    "pl":          "✅ Cieszę się, że mogłem pomóc! Odpowiedź wysłana do weryfikacji.",
                 }
                 await query.edit_message_text(
                     THANKS_USER.get(lang, THANKS_USER["ru"])
@@ -4088,7 +4106,16 @@ async def handle_satisfaction_callback(
                     "ru":          "📋 Вопрос добавлен в раздел 'На проверке' с пометкой 'Требует уточнения'.",
                     "uz_latin":    "📋 Savol 'Ko'rib chiqish' bo'limiga 'Aniqlashtirish kerak' belgisi bilan qo'shildi.",
                     "uz_cyrillic": "📋 Савол 'Кўриб чиқиш' бўлимига 'Аниқлаштириш керак' белгиси билан қўшилди.",
-                    "ru_translit": "📋 Vopros dobavlen v 'Na proverke' s pometkey.",
+                    "ru_translit": "📋 Vopros dobavlen v 'Na proverke' s pometkey 'Trebuet utochneniya'.",
+                    "en":          "📋 Question added to 'Under Review' with note 'Needs clarification'.",
+                    "uk":          "📋 Питання додано до розділу 'На перевірці' з поміткою 'Потребує уточнення'.",
+                    "be":          "📋 Пытанне дадана ў раздзел 'На праверцы' з заўвагай 'Патрабуе ўдакладнення'.",
+                    "de":          "📋 Frage mit dem Hinweis 'Klärung erforderlich' in 'Zur Prüfung' hinzugefügt.",
+                    "kk":          "📋 Сұрақ 'Нақтылау қажет' белгісімен 'Тексеруде' бөліміне қосылды.",
+                    "ky":          "📋 Суроо 'Тактоо керек' белгиси менен 'Текшерүүдө' бөлүмүнө кошулду.",
+                    "tg":          "📋 Савол бо ёддошти 'Равшанкунӣ лозим' ба бахши 'Дар баррасӣ' илова шуд.",
+                    "tk":          "📋 Sorag 'Anyklamak gerek' belligi bilen 'Barlagda' bölümine goşuldy.",
+                    "pl":          "📋 Pytanie dodano do sekcji 'W trakcie weryfikacji' z adnotacją 'Wymaga doprecyzowania'.",
                 }
                 await query.edit_message_text(CLARIFY_ADMIN.get(lang, CLARIFY_ADMIN["ru"]))
                 logger.info(f"Администратор пометил вопрос как 'требует уточнения'")
@@ -4106,10 +4133,19 @@ async def handle_satisfaction_callback(
                 "ts": time.monotonic(),
             }
             CLARIFY_USER = {
-                "ru":          "🔧 Что именно нужно уточнить? Напишите дополнительные данные или уточняющий вопрос:",
-                "uz_latin":    "🔧 Nimani aniqlashtirmoqchisiz? Qo'shimcha ma'lumot yoki savol yozing:",
-                "uz_cyrillic": "🔧 Нимани аниқлаштирмоқчисиз? Қўшимча маълумот ёки савол ёзинг:",
-                "ru_translit": "🔧 Chto utochnit? Napishite dopolnenie ili vopros:",
+                "ru":          "🔧 Что именно нужно уточнить? Напишите дополнительные данные:",
+                "uz_latin":    "🔧 Nimani aniqlashtirmoqchisiz? Qo'shimcha ma'lumot yozing:",
+                "uz_cyrillic": "🔧 Нимани аниқлаштирмоқчисиз? Қўшимча маълумот ёзинг:",
+                "ru_translit": "🔧 Chto utochnit? Napishite dopolnenie:",
+                "en":          "🔧 What needs clarification? Please provide additional details:",
+                "uk":          "🔧 Що потребує уточнення? Напишіть додаткові дані:",
+                "be":          "🔧 Што трэба ўдакладніць? Напішыце дадатковыя звесткі:",
+                "de":          "🔧 Was muss geklärt werden? Bitte geben Sie weitere Details an:",
+                "kk":          "🔧 Нені нақтылау керек? Қосымша деректерді жазыңыз:",
+                "ky":          "🔧 Эмнени тактоо керек? Кошумча маалыматты жазыңыз:",
+                "tg":          "🔧 Чӣ равшан кардан лозим аст? Маълумоти иловагӣ нависед:",
+                "tk":          "🔧 Näme anyklamaly? Goşmaça maglumatlary ýazyň:",
+                "pl":          "🔧 Co wymaga doprecyzowania? Podaj dodatkowe informacje:",
             }
             try:
                 await query.edit_message_text(CLARIFY_USER.get(lang, CLARIFY_USER["ru"]))

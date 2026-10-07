@@ -70,7 +70,7 @@
       "source": "manual",
       "created_at": "2024-01-01T00:00:00",
       "updated_at": "2024-01-01T00:00:00",
-      "usage_count": 2
+      "usage_count": 4
     },
     {
       "id": "kb_005",
@@ -354,7 +354,7 @@
       "chat_id": -1004368283151,
       "timestamp": "2026-10-07T09:51:08.805898+00:00",
       "status": "admin_needs_clarify",
-      "ai_answer": "GBO-4 (4-avlod) uchun propan reduktor bosimi aniq bir son bilan emas, balki **dvigatel aylanish tezligiga (RPM)** va **yuklamaga** qarab o'zgaradi.\n\nAniq qiymatni berish uchun quyidagi ma'lumotlarni berishingiz kerak:\n1. **Avto markasi, modeli va yili.**\n2. **Dvigatel hajmi va kuchi (kV).**\n3. **Qaysi reduktor o'rnatilgan?** (Masalan: Lovato, STAG, KME, Prins va h.k.)\n4. **Dvigatel holati:** Sovuqmi yoki isitilganmi?\n\n### Umumiya ma'lumot (Faqat yo'nalish uchun):\n\n4-avlod tizimida reduktor bosimi odatda quyidagicha bo'ladi:\n\n*   **Bo'sh yurishda (800-1000 RPM):**\n    *   Odatda **0.5 – 1.0 bar** atrofida bo'ladi.\n    *   Ba'zi tizimlarda (masalan, STAG) bo'sh yurishda bosim juda past bo'lishi yoki hatto 0 ga yaqinlashishi mumkin (agar tizim \"low pressure\" rejimida ishlasa).\n\n*   **Yuklama ostida (2000-3000 RPM):**\n    *   **1.5 – 3.0 bar** oralig'ida bo'ladi.\n    *   Kuchliroq dvigatellarda (2.0L va undan yuqori) bosim **3.0 – 4.0 bar** gacha chiqishi mumkin.\n\n*   **Maksimal bosim:**\n    *   Odatda **4.0 – 5.0 bar** dan oshmasligi kerak. Agar bosim 5 bar dan yuqori bo'lsa, bu reduktor yoki tizimda muammo borligini ko'rsatadi.\n\n### Muhim eslatma:\n*   **Propan (LPG)** va **Metan (CNG)** tizimlari farq qiladi. Siz propan haqida so'radingiz.\n*   **STAG tizimlari** uchun: STAG 400/4000 seriyasida bosim parametrlari ECU sozlamalariga bog'liq. Odatda, bo'sh yurishda 0.5-0.8 bar, yuklama ostida 2.5-3.5 bar atrofida bo'ladi.\n*   **Diqqat:** Agar bosim juda past bo'lsa, dvigatel \"tutadi\" yoki tezlikka chiqmaydi. Agar bosim juda yuqori bo'lsa, injektorlar buzilishi yoki gaz oqimi ortib ketishi mumkin.\n\n**Ruxsat berilgan javob:**\nAniq qiymatni bilish uchun **qaysi brendli reduktor** o'rnatilganini va **dvigatel parametrlarini** yozing. Shuningdek, **Data Stream** (real vaqt ma'lumotlari) orqali reduktor bosimini (Fuel Pressure / LPG Pressure) tekshirish tavsiya etiladi.\n\nAgar siz **STAG** tizimini ishlatayotgan bo'lsangiz, 4-avlodda odatda:\n*   Bo'sh yurish: **0.5 - 1.0 bar**\n*   Ish yuklamasi: **2.0 - 3.5 bar**\n\nBu qiymatlar dvigatel isitilgan holatda bo'lishi kerak."
+      "ai_answer": "Propan (LPG) reduktor bosimi aniq bir qiymatga ega emas, u to'g'ridan-to'g'ri **dvigatelning turiga** (benzinli yoki dizel), **ishlash rejimiga** (sovuq yoki issiq) va **GBO tizimining avlodiga** bog'liq.\n\nAniq javob berish uchun quyidagi ma'lumotlarni bering:\n\n1.  **Avto va dvigatel:** Qaysi avtomobil, qanday dvigatel (benzinli yoki dizel), qanday hajm?\n2.  **GBO tizimi:** Qaysi avlod (2, 3, 4 yoki 5 avlod)? Qaysi brend (masalan, AC STAG, BRC, Lovato)?\n3.  **Bosim qayerda o'lchanadi?** Reduktordan keyingi gaz magistralida yoki karbyurator/injektorlar oldida?\n4.  **Holat:** Dvigatel sovuqmi yoki ish haroratiga chiqqanmi?\n\n**Umumiy ma'lumot (faqat yo'nalish uchun):**\n\n*   **Benzinli dvigatellar (4-5 avlod):**\n    *   Sovuq holatda: ~1.0 – 1.5 bar (ba'zi tizimlarda 1.2 bar atrofida).\n    *   Ish haroratida: ~1.2 – 1.6 bar (dvigatel aylanish tezligiga qarab o'zgaradi).\n    *   *Eslatma:* 4-5 avlodda bosim odatda 1.2-1.5 bar oralig'ida barqaror bo'lishi kerak.\n\n*   **Dizel dvigatellar (4-5 avlod):**\n    *   Bosim benzinlilarga qaraganda yuqori bo'ladi.\n    *   Odatda: 1.8 – 2.5 bar (ba'zi tizimlarda 3 bar gacha).\n    *   *Eslatma:* Dizel uchun maxsus yuqori bosimli reduktorlar ishlatiladi.\n\n**Diqqat:**\n*   Agar siz **2-3 avlod** (karbyuratorli) tizim haqida so'rasangiz, bosim 1.0 – 1.2 bar atrofida bo'lishi kerak.\n*   **O'lchov sharti:** Bosimni faqat **issiq dvigatel** va **gaz rejimida** o'lchash kerak. Sovuq dvigatelga o'tkazilganda bosim past bo'lishi tabiiy.\n*   **Xavfsizlik:** Gaz magistralida bosim o'lchash paytida gaz oqimiga ehtiyot bo'ling.\n\nIltimos, yuqoridagi 4 ta savolga javob bering, aniq qiymatni aytib beraman."
     },
     {
       "id": "pend_bd4f5e62",
@@ -363,6 +363,15 @@
       "message_text": "[ТРЕБУЕТ УТОЧНЕНИЯ - ADMIN] propan reduktor bosimi nechi bulish keraq gbo-4 ucun",
       "chat_id": -1004368283151,
       "timestamp": "2026-10-07T09:51:44.577406+00:00",
+      "status": "new"
+    },
+    {
+      "id": "pend_a47db6c7",
+      "user_id": 39425955,
+      "username": "AnatoliyAndrianov",
+      "message_text": "propan reduktor bosimi nechi bulish keraq gbo-4 ucun (другой вариант, предыдущий ответ не подошёл)",
+      "chat_id": -1004368283151,
+      "timestamp": "2026-10-07T16:41:11.581617+00:00",
       "status": "new"
     }
   ]
