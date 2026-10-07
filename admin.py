@@ -464,10 +464,16 @@ def pending_add_form(pid):
 
     html = _render_page("pending", f"""
     <h5 class="fw-bold mb-4">➕ Добавить в БЗ</h5>
-    <div class="alert alert-info d-flex gap-3 flex-wrap">
+    <div class="alert alert-info d-flex gap-3 flex-wrap align-items-center">
       <span><strong>Кнопка:</strong> {action_label}</span>
       <span><strong>Роль:</strong> {role_label}</span>
-      <span><strong>Язык:</strong> {p.get('lang','ru')}</span>
+      <div class="d-flex align-items-center gap-1">
+        <strong>Язык:</strong>
+        <select name="lang_override" class="form-select form-select-sm" style="width:auto">
+          {"".join(f'<option value="{c}" {"selected" if c == p.get("lang","ru") else ""}>{c}</option>'
+            for c in ["ru","uz_cyrillic","uz_latin","ru_translit","en","uk","be","de","kk","ky","tg","tk","pl"])}
+        </select>
+      </div>
     </div>
     <div class="card p-4">
     <form method="post" action="/pending/save/{pid}">
@@ -506,13 +512,14 @@ def pending_add_form(pid):
 def pending_save(pid):
     """
     Сохраняет отредактированный ответ из 'На проверке' в базу знаний.
-    Поддерживает привязку файла из каталога через file_id.
+    Поддерживает привязку файла из каталога и переопределение языка.
     """
-    q       = request.form.get("question", "").strip()
-    a       = request.form.get("answer",   "").strip()
-    cat     = request.form.get("category", "").strip()
-    kw      = [k.strip() for k in request.form.get("keywords","").split(",") if k.strip()]
-    file_id = request.form.get("file_id",  "").strip()
+    q            = request.form.get("question",      "").strip()
+    a            = request.form.get("answer",        "").strip()
+    cat          = request.form.get("category",      "").strip()
+    kw           = [k.strip() for k in request.form.get("keywords","").split(",") if k.strip()]
+    file_id      = request.form.get("file_id",       "").strip()
+    lang_override = request.form.get("lang_override", "").strip()
     if q and a and cat:
         entry = kb_manager.add_entry(cat, q, a, kw, source="learning")
         # Привязываем файл если выбран

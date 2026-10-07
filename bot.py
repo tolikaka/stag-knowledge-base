@@ -1994,13 +1994,14 @@ async def _call_ai_with_fallback(
 
 
 async def generate_answer(
-    user_id: int,        # Telegram ID пользователя
-    question: str,       # Текст вопроса
-    lang: str,           # Язык ответа ('ru', 'uz_cyrillic', ...)
-    username: str = "",  # @username для логов
-    chat_id: int = 0,    # ID чата для pending
-    msg_obj=None,        # Объект Message — нужен для handle_file_request
-    ctx_obj=None,        # Объект context — нужен для handle_file_request
+    user_id: int,           # Telegram ID пользователя
+    question: str,          # Текст вопроса
+    lang: str,              # Язык ответа ('ru', 'uz_cyrillic', ...)
+    username: str = "",     # @username для логов
+    chat_id: int = 0,       # ID чата для pending
+    msg_obj=None,           # Объект Message — нужен для handle_file_request
+    ctx_obj=None,           # Объект context — нужен для handle_file_request
+    is_retry: bool = False, # True при повторном поиске — пропускаем авто-pending
 ) -> tuple[str, str]:
     """
     Главная функция поиска ответа. Перебирает источники по цепочке.
@@ -2081,21 +2082,34 @@ async def generate_answer(
 
         if not ai_answer:
             logger.warning("AI вернул пустой ответ; вопрос сохранён в pending")
-            kb_manager.add_pending_question(user_id, username, question, chat_id)
+            kb_manager.add_pending_question(
+                user_id, username, question, chat_id,
+                source_action="auto", source_role="system", lang=lang,
+            )
             return UNAVAILABLE_MSG.get(lang, UNAVAILABLE_MSG["ru"]), "unavailable", ""
 
         # Сохраняем ответ AI в историю диалога
         add_history(chat_id, user_id, "assistant", ai_answer)
 
         # Сохраняем вопрос для самообучения базы знаний
-        kb_manager.add_pending_question(user_id, username, question, chat_id)
+        # При повторном поиске (is_retry=True) пропускаем —
+        # запись создастся через sat_wrong x2 путь с обоими ответами
+        if not is_retry:
+            kb_manager.add_pending_question(
+                user_id, username, question, chat_id,
+                ai_answer=ai_answer,
+                source_action="auto", source_role="system", lang=lang,
+            )
 
         return ai_answer, ("web_ai" if web_source else "ai"), ai_source
 
     except Exception as e:
         # Что-то пошло не так (нет интернета, проблема с API и т.д.)
         logger.exception("Ошибка формирования ответа через AI")
-        kb_manager.add_pending_question(user_id, username, question, chat_id)
+        kb_manager.add_pending_question(
+            user_id, username, question, chat_id,
+            source_action="error", source_role="system", lang=lang,
+        )
         reason = user_error_reason(e)
         fallback = UNAVAILABLE_MSG.get(lang, UNAVAILABLE_MSG["ru"])
         return f"❌ Причина: {reason}.\n\n{fallback}", "error", ""
@@ -2306,7 +2320,10 @@ async def process_user_question(
             return
     except Exception as e:
         logger.exception("Необработанная ошибка при подготовке ответа")
-        kb_manager.add_pending_question(user_id, username, question, msg.chat_id)
+        kb_manager.add_pending_question(
+            user_id, username, question, msg.chat_id,
+            source_action="error", source_role="system", lang=lang,
+        )
         reason = user_error_reason(e)
         answer = (
             f"❌ Причина: {reason}.\n\n"
@@ -4108,11 +4125,8 @@ async def handle_satisfaction_callback(
                     source_role="admin",
                     lang=lang,
                 )
-                for p in kb_manager._kb.get("pending_learning", []):
-                    if p.get("message_text","").endswith(question):
-                        p["ai_answer"] = answer
-                        p["status"]    = "admin_needs_clarify"
-                        break
+                # ai_answer уже передан через add_pending_question
+                # Статус остаётся "new" чтобы отображался в таблице
                 await kb_manager._save_local()
                 CLARIFY_ADMIN = {
                     "ru":          "📋 Вопрос добавлен в раздел 'На проверке' с пометкой 'Требует уточнения'.",
@@ -4233,6 +4247,7 @@ async def handle_satisfaction_callback(
             lang=lang,
             username=username,
             chat_id=chat_id,
+            is_retry=True,  # Не создавать авто-pending — ответ войдёт в ai_answer2
         )
 
         if retry_answer and retry_answer != answer:
