@@ -1,4 +1,4 @@
-# FILE: knowledge_manager.py | VERSION: 1.1.1 | DATE: 2026-10-04
+# FILE: knowledge_manager.py | VERSION: 1.2.0 | DATE: 2026-10-04
 # ==============================================================================
 #  knowledge_manager.py  —  Управление базой знаний AI_Diag_UZ
 # ==============================================================================
@@ -1023,17 +1023,23 @@ class KnowledgeManager:
 
     def add_pending_question(
         self,
-        user_id: int,       # Telegram ID пользователя
-        username: str,      # @username пользователя
-        message_text: str,  # Текст вопроса
-        chat_id: int        # ID чата где был задан вопрос
+        user_id: int,            # Telegram ID пользователя
+        username: str,           # @username пользователя
+        message_text: str,       # Текст вопроса
+        chat_id: int,            # ID чата где был задан вопрос
+        ai_answer: str = "",     # Первый ответ бота (О1)
+        ai_answer2: str = "",    # Второй ответ бота (О2) после повтора
+        source_action: str = "", # Кнопка: sat_ok/sat_wrong/sat_clarify
+        source_role: str = "",   # Роль: user/admin
+        lang: str = "ru",        # Язык вопроса
+        file_id: str = "",       # Привязанный файл из file_catalog
     ) -> None:
         """
-        Сохраняет вопрос, на который не нашлось ответа в базе знаний.
+        Сохраняет вопрос в раздел "На проверке".
 
-        Эти вопросы накапливаются в списке "pending_learning".
-        Администратор периодически просматривает их через веб-админку
-        или команду /pending и добавляет лучшие в базу знаний.
+        Накапливает вопросы для изучения администратором.
+        Теперь хранит ответ бота, источник и язык для удобства
+        работы в панели администратора.
 
         Дублирующиеся вопросы (одинаковый текст) не сохраняются.
 
@@ -1053,15 +1059,21 @@ class KnowledgeManager:
         # Создаём запись о вопросе
         pending_entry = {
             # Уникальный ID: хэш от user_id + текста вопроса
-            "id":           "pend_" + hashlib.md5(
-                                f"{user_id}{message_text}".encode()
-                             ).hexdigest()[:8],
-            "user_id":      user_id,
-            "username":     username,
-            "message_text": message_text,
-            "chat_id":      chat_id,
-            "timestamp":    datetime.now(timezone.utc).isoformat(),
-            "status":       "new",     # Статусы: new → reviewed/added/rejected
+            "id":            "pend_" + hashlib.md5(
+                                 f"{user_id}{message_text}".encode()
+                              ).hexdigest()[:8],
+            "user_id":       user_id,
+            "username":      username,
+            "message_text":  message_text,
+            "chat_id":       chat_id,
+            "timestamp":     datetime.now(timezone.utc).isoformat(),
+            "status":        "new",        # Статусы: new → reviewed/added/rejected
+            "lang":          lang,         # Язык вопроса (ru/en/uz_latin/...)
+            "source_action": source_action, # Кнопка: sat_ok/sat_wrong/sat_clarify
+            "source_role":   source_role,   # Роль: user/admin
+            "ai_answer":     ai_answer,     # Первый ответ бота О1
+            "ai_answer2":    ai_answer2,    # Второй ответ бота О2 (после повтора)
+            "file_id":       file_id,       # Привязанный файл из file_catalog
         }
         pending_list.append(pending_entry)
         logger.info(f"Сохранён вопрос для самообучения: {message_text[:50]}")

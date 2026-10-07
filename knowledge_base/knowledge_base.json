@@ -197,7 +197,7 @@
       "message_text": "[ТРЕБУЕТ УТОЧНЕНИЯ - ADMIN] распиновка датчика положения дроссельной заслонки Нексия 2 со схемой и цветом проводов",
       "chat_id": -1004368283151,
       "timestamp": "2026-10-04T08:11:01.323256+00:00",
-      "status": "new"
+      "status": "rejected"
     },
     {
       "id": "pend_11a583f9",
@@ -206,7 +206,7 @@
       "message_text": "Какое давление газа в рампе STAG?",
       "chat_id": -1004368283151,
       "timestamp": "2026-10-04T08:58:03.046404+00:00",
-      "status": "new"
+      "status": "rejected"
     },
     {
       "id": "pend_8eba739d",
@@ -215,7 +215,7 @@
       "message_text": "диаметр жиклеров для Кобальт",
       "chat_id": -1004368283151,
       "timestamp": "2026-10-04T09:04:00.767396+00:00",
-      "status": "new"
+      "status": "rejected"
     },
     {
       "id": "pend_10b28e58",
@@ -224,7 +224,7 @@
       "message_text": "диаметр жиклеров для Кобальт (другой вариант, предыдущий ответ не подошёл)",
       "chat_id": -1004368283151,
       "timestamp": "2026-10-04T09:04:31.283442+00:00",
-      "status": "new"
+      "status": "rejected"
     },
     {
       "id": "pend_fe3aa51e",
@@ -243,7 +243,7 @@
       "message_text": "[ТРЕБУЕТ УТОЧНЕНИЯ - ADMIN] машина газга утмаяпти. Шунака хато беряпти. Нимадан булиш мумкин?",
       "chat_id": -1004368283151,
       "timestamp": "2026-10-04T09:25:00.335513+00:00",
-      "status": "new"
+      "status": "rejected"
     },
     {
       "id": "pend_8761f3e5",
@@ -252,7 +252,7 @@
       "message_text": "P0089 error Chevrolet Equinox what does it mean",
       "chat_id": -1004368283151,
       "timestamp": "2026-10-04T20:26:16.861921+00:00",
-      "status": "new"
+      "status": "rejected"
     },
     {
       "id": "pend_8c2f8ca6",
@@ -261,7 +261,7 @@
       "message_text": "what does error P0089 mean?",
       "chat_id": -1004368283151,
       "timestamp": "2026-10-04T20:46:47.558003+00:00",
-      "status": "new"
+      "status": "rejected"
     },
     {
       "id": "pend_760f2e86",
@@ -270,7 +270,7 @@
       "message_text": "what does P0089 mean?",
       "chat_id": -1004368283151,
       "timestamp": "2026-10-04T21:15:07.586556+00:00",
-      "status": "new"
+      "status": "rejected"
     },
     {
       "id": "pend_3d4eca53",
@@ -289,7 +289,7 @@
       "message_text": "[ТРЕБУЕТ УТОЧНЕНИЯ - ADMIN] где находится серийный код блока управления  Stag-200",
       "chat_id": -1004368283151,
       "timestamp": "2026-10-05T20:43:50.133580+00:00",
-      "status": "new"
+      "status": "rejected"
     },
     {
       "id": "pend_76ed0356",
@@ -298,7 +298,7 @@
       "message_text": "где находится серийный код блока управления  Stag-200 (другой вариант, предыдущий ответ не подошёл)",
       "chat_id": -1004368283151,
       "timestamp": "2026-10-05T20:44:04.176891+00:00",
-      "status": "new"
+      "status": "rejected"
     },
     {
       "id": "pend_09b42cf5",
@@ -317,7 +317,7 @@
       "message_text": "[ТРЕБУЕТ УТОЧНЕНИЯ - ADMIN] какой редуктор лучше поставить на Onix",
       "chat_id": -1004368283151,
       "timestamp": "2026-10-06T21:32:05.332222+00:00",
-      "status": "new"
+      "status": "rejected"
     },
     {
       "id": "pend_c1b9a86a",
@@ -326,7 +326,7 @@
       "message_text": "Cobaltga qaysi biri gas injector urnatish kulayroq",
       "chat_id": -1004368283151,
       "timestamp": "2026-10-06T21:36:27.001139+00:00",
-      "status": "new"
+      "status": "rejected"
     },
     {
       "id": "pend_cfc50710",
@@ -335,7 +335,7 @@
       "message_text": "is it possible to change D shift to R shift when you drive  car forward without stop the car",
       "chat_id": -1004368283151,
       "timestamp": "2026-10-06T21:39:52.537043+00:00",
-      "status": "new"
+      "status": "rejected"
     },
     {
       "id": "pend_873fb5fd",
@@ -344,7 +344,7 @@
       "message_text": "is it possible to change D shift to R shift when you drive  car forward without stop the car (другой вариант, предыдущий ответ не подошёл)",
       "chat_id": -1004368283151,
       "timestamp": "2026-10-06T21:40:14.287037+00:00",
-      "status": "new"
+      "status": "rejected"
     },
     {
       "id": "pend_9db04143",
@@ -363,7 +363,7 @@
       "message_text": "[ТРЕБУЕТ УТОЧНЕНИЯ - ADMIN] propan reduktor bosimi nechi bulish keraq gbo-4 ucun",
       "chat_id": -1004368283151,
       "timestamp": "2026-10-07T09:51:44.577406+00:00",
-      "status": "new"
+      "status": "rejected"
     },
     {
       "id": "pend_a47db6c7",
@@ -372,7 +372,52 @@
       "message_text": "propan reduktor bosimi nechi bulish keraq gbo-4 ucun (другой вариант, предыдущий ответ не подошёл)",
       "chat_id": -1004368283151,
       "timestamp": "2026-10-07T16:41:11.581617+00:00",
-      "status": "new"
+      "status": "rejected"
+    },
+    {
+      "id": "pend_47a70a8d",
+      "user_id": 39425955,
+      "username": "AnatoliyAndrianov",
+      "message_text": "что такое ошибка P0300?",
+      "chat_id": -1004368283151,
+      "timestamp": "2026-10-07T17:13:06.172522+00:00",
+      "status": "new",
+      "lang": "ru",
+      "source_action": "",
+      "source_role": "",
+      "ai_answer": "",
+      "ai_answer2": "",
+      "file_id": ""
+    },
+    {
+      "id": "pend_4c5fcc26",
+      "user_id": 39425955,
+      "username": "AnatoliyAndrianov",
+      "message_text": "что такое ошибка P0300? (другой вариант, предыдущий ответ не подошёл)",
+      "chat_id": -1004368283151,
+      "timestamp": "2026-10-07T17:15:53.849533+00:00",
+      "status": "new",
+      "lang": "ru",
+      "source_action": "",
+      "source_role": "",
+      "ai_answer": "",
+      "ai_answer2": "",
+      "file_id": ""
+    },
+    {
+      "id": "pend_d9def422",
+      "user_id": 39425955,
+      "username": "AnatoliyAndrianov",
+      "message_text": "what is STAG 400?",
+      "chat_id": -1004368283151,
+      "timestamp": "2026-10-07T17:26:21.257765+00:00",
+      "status": "admin_needs_clarify",
+      "lang": "ru",
+      "source_action": "",
+      "source_role": "",
+      "ai_answer": "The **STAG 400** is a 4th generation sequential gas injection system manufactured by **AC STAG**, a leading Polish producer of automotive LPG (Liquefied Petroleum Gas) equipment.\n\n### Key Features:\n*   **Generation:** 4th Generation (Liquid phase injection).\n*   **Configuration:** Sequential injection (injectors fire in sync with the engine's ignition order).\n*   **Components:**\n    *   **ECU (Electronic Control Unit):** Manages gas injection based on engine parameters (RPM, load, temperature, etc.).\n    *   **Injectors:** Typically 4 or 6 injectors (depending on engine cylinders), usually made of stainless steel or aluminum with ceramic nozzles.\n    *   **Vaporizer:** Heats the liquid LPG to convert it into gas.\n    *   **Pressure Regulator:** Reduces pressure from the cylinder to the level required by the vaporizer.\n    *   **Gas Train:** Includes the main valve, filter, and hoses.\n    *   **Tank:** LPG cylinder (not part of the STAG 400 kit itself, but required for operation).\n    *   **Switch:** For switching between petrol and gas.\n\n### Compatibility:\n*   Designed for **4-cylinder** and **6-cylinder** petrol engines.\n*   Works with both **port-fuel injected** (MPI) and some **direct-injection** engines (with additional hardware like a gas manifold or rail, depending on the specific engine and installation method).\n*   Compatible with most modern OBD-II vehicles.\n\n### Advantages:\n*   **Cost-Effective:** LPG is significantly cheaper than petrol in most regions.\n*   **Eco-Friendly:** Lower CO2 and particulate emissions compared to petrol.\n*   **Reliability:** AC STAG is known for robust, long-lasting components.\n*   **Performance:** Maintains original engine power and torque when properly tuned.\n\n### Important Notes for Technicians:\n1.  **Calibration:** Proper calibration of the gas map (using a diagnostic tool like STAG Diagnostics or compatible OBD software) is critical for optimal performance and fuel economy.\n2.  **Leak Check:** Always perform a leak test (with soapy water or electronic detector) after installation.\n3.  **Safety:** Ensure all connections are tight and hoses are not damaged. LPG is highly flammable.\n4.  **Engine Compatibility:** Verify that the engine is suitable for LPG conversion (e.g., valve seat material, injector type, engine management system).\n\nIf you are installing or diagnosing a STAG 400 system, ensure you have the correct **injector type** (e.g., standard, high-flow, or for direct injection) and that the **ECU firmware** is up to date for the specific engine.",
+      "ai_answer2": "",
+      "file_id": ""
     }
   ]
 }

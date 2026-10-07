@@ -1,4 +1,4 @@
-# FILE: bot.py | VERSION: 1.2.1 | DATE: 2026-10-04
+# FILE: bot.py | VERSION: 1.3.5 | DATE: 2026-10-04
 # ==============================================================================
 #  bot.py  —  Главный файл Telegram-бота AI_Diag_UZ («Уста»)
 # ==============================================================================
@@ -3374,8 +3374,12 @@ async def handle_feedback_callback(
             kb_manager.add_pending_question(
                 user_id=fb_user,
                 username=username,
-                message_text=f"[КОРРЕКТИРОВКА] {question}",
+                message_text=question,
                 chat_id=chat_id,
+                ai_answer=answer if "answer" in dir() else "",
+                source_action="sat_clarify",
+                source_role="user",
+                lang=lang if "lang" in dir() else "ru",
             )
             logger.info(
                 f"Обратная связь 'Не верно': вопрос отправлен на корректировку | "
@@ -4045,8 +4049,12 @@ async def handle_satisfaction_callback(
                 kb_manager.add_pending_question(
                     user_id=user_id,
                     username=username,
-                    message_text=f"[ОДОБРЕНО ПОЛЬЗОВАТЕЛЕМ] {question}",
+                    message_text=question,
                     chat_id=chat_id,
+                    ai_answer=answer,
+                    source_action="sat_ok",
+                    source_role="user",
+                    lang=lang,
                 )
                 # Сохраняем ответ рядом с вопросом для последующей обработки
                 pending = kb_manager._kb.get("pending_learning", [])
@@ -4093,8 +4101,12 @@ async def handle_satisfaction_callback(
                 kb_manager.add_pending_question(
                     user_id=user_id,
                     username=username,
-                    message_text=f"[ТРЕБУЕТ УТОЧНЕНИЯ - ADMIN] {question}",
+                    message_text=question,
                     chat_id=chat_id,
+                    ai_answer=answer,
+                    source_action="sat_clarify",
+                    source_role="admin",
+                    lang=lang,
                 )
                 for p in kb_manager._kb.get("pending_learning", []):
                     if p.get("message_text","").endswith(question):
@@ -4189,8 +4201,13 @@ async def handle_satisfaction_callback(
                 kb_manager.add_pending_question(
                     user_id=user_id,
                     username=username,
-                    message_text=f"[НЕВЕРНЫЙ ОТВЕТ x2] {question}",
+                    message_text=question,
                     chat_id=chat_id,
+                    ai_answer=entry.get("answer", ""),
+                    ai_answer2=retry_answer,
+                    source_action="sat_wrong",
+                    source_role="user",
+                    lang=lang,
                 )
             except Exception as e:
                 logger.error(f"Ошибка сохранения в pending: {e}")
@@ -4265,9 +4282,14 @@ async def handle_satisfaction_callback(
                 pass
             try:
                 kb_manager.add_pending_question(
-                    user_id=user_id, username=username,
-                    message_text=f"[НЕВЕРНЫЙ ОТВЕТ] {question}",
-                    chat_id=chat_id, ai_answer=answer,
+                    user_id=user_id,
+                    username=username,
+                    message_text=question,
+                    chat_id=chat_id,
+                    ai_answer=answer,
+                    source_action="sat_wrong",
+                    source_role="admin",
+                    lang=lang,
                 )
             except Exception as e:
                 logger.error(f"Ошибка сохранения в pending: {e}")

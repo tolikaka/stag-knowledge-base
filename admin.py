@@ -35,17 +35,19 @@ try:
 except ImportError:
     ADMIN_SECRET_KEY = os.environ.get("ADMIN_SECRET_KEY") or secrets.token_hex(32)
     ADMIN_USERS = {}
-    ADMIN_HOST = "0.0.0.0"
+    ADMIN_HOST = "127.0.0.1"  # Только локальный доступ (аудит C4)
     ADMIN_PORT = 8080
 
 app = Flask(__name__)
-app.config['MAX_CONTENT_LENGTH'] = None  # Без ограничения — файлы хранятся локально
 app.config['MAX_CONTENT_LENGTH'] = 4 * 1024 * 1024 * 1024  # 4 GB макс. для веб-загрузки
 app.secret_key = ADMIN_SECRET_KEY
 
 # ── Auth ──────────────────────────────────────────────────────────────────────
 def hash_password(pw: str) -> str:
-    return hashlib.sha256(pw.encode()).hexdigest()
+    import hmac as _hmac
+    _key = (app.secret_key if isinstance(app.secret_key, bytes)
+            else app.secret_key.encode())
+    return _hmac.new(_key, pw.encode(), 'sha256').hexdigest()
 
 def check_auth(username: str, password: str) -> bool:
     expected = ADMIN_USERS.get(username)
@@ -370,23 +372,71 @@ def entry_delete(entry_id):
 @app.route("/pending")
 @login_required
 def pending():
+    """
+    Страница раздела 'На проверке'.
+    Показывает все вопросы со статусом 'new'.
+    Таблица содержит: время, вопрос, ответ бота О1,
+    действие (кнопка), роль, язык, кнопки управления.
+    """
     items = [p for p in kb_manager.get_pending() if p["status"] == "new"]
     rows = ""
+
+    # Словарь иконок для кнопок оценки
+    ACTION_ICONS = {
+        "sat_ok":      "✅ Спасибо",
+        "sat_wrong":   "❌ Не верно",
+        "sat_clarify": "🔧 Уточнить",
+    }
+    # Словарь иконок ролей
+    ROLE_ICONS = {
+        "admin": "👤 Админ",
+        "user":  "💬 Польз.",
+    }
+
     for p in items:
+        # Ответ бота — показываем первые 100 символов О1
+        ai_ans = _esc(p.get("ai_answer", ""))[:100]
+        ai_ans2 = p.get("ai_answer2", "")
+        ai_cell = ai_ans if ai_ans else "<span class='text-muted'>—</span>"
+        if ai_ans2:
+            ai_cell += f"<br><small class='text-muted'>О2: {_esc(ai_ans2)[:80]}</small>"
+
+        # Действие и роль
+        action_badge = ACTION_ICONS.get(
+            p.get("source_action",""), p.get("source_action","—"))
+        role_badge = ROLE_ICONS.get(
+            p.get("source_role",""), p.get("source_role","—"))
+
+        # Язык
+        lang_badge = p.get("lang","ru")
+
         rows += f"""<tr>
-          <td class="small text-muted">{p['timestamp'][:16]}</td>
-          <td>{p['message_text'][:120]}</td>
-          <td><span class="badge bg-warning text-dark">new</span></td>
+          <td class="small text-muted text-nowrap">{p['timestamp'][:16]}</td>
+          <td><strong>{_esc(p.get('message_text', ''))[:100]}</strong>
+              <br><small class="text-muted">{lang_badge}</small></td>
+          <td class="small">{ai_cell}</td>
+          <td class="small text-nowrap">{action_badge}</td>
+          <td class="small text-nowrap">{role_badge}</td>
           <td>
-            <a href="/pending/add/{p['id']}" class="btn btn-sm btn-outline-success me-1"><i class="bi bi-plus-lg"></i> В БЗ</a>
-            <a href="/pending/reject/{p['id']}" class="btn btn-sm btn-outline-danger"><i class="bi bi-x-lg"></i></a>
+            <a href="/pending/add/{p['id']}" class="btn btn-sm btn-outline-success me-1"
+               title="Добавить в БЗ"><i class="bi bi-plus-lg"></i></a>
+            <a href="/pending/reject/{p['id']}" class="btn btn-sm btn-outline-danger"
+               title="Удалить"><i class="bi bi-x-lg"></i></a>
           </td></tr>"""
+
     html = _render_page("pending", f"""
-    <h5 class="fw-bold mb-3">⏳ Вопросы без ответа ({len(items)})</h5>
-    <p class="text-muted small">Вопросы, на которые не нашлось ответа в базе знаний. Добавьте лучшие из них.</p>
-    <div class="card"><div class="table-responsive"><table class="table table-hover mb-0">
-    <thead><tr><th>Время</th><th>Вопрос</th><th>Статус</th><th>Действия</th></tr></thead>
-    <tbody>{rows or '<tr><td colspan="4" class="text-center text-muted py-4">✅ Нет новых вопросов</td></tr>'}</tbody>
+    <h5 class="fw-bold mb-3">⏳ На проверке ({len(items)})</h5>
+    <p class="text-muted small">Вопросы пользователей с ответами бота. Добавьте лучшие в базу знаний.</p>
+    <div class="card"><div class="table-responsive">
+    <table class="table table-hover table-sm mb-0">
+    <thead class="table-light"><tr>
+      <th>Время</th><th>Вопрос / Язык</th>
+      <th>Ответ бота (О1/О2)</th>
+      <th>Кнопка</th><th>Роль</th><th>Действия</th>
+    </tr></thead>
+    <tbody>{rows or
+        '<tr><td colspan="6" class="text-center text-muted py-4">✅ Нет новых вопросов</td></tr>'
+    }</tbody>
     </table></div></div>""")
     return html
 
@@ -398,24 +448,55 @@ def pending_add_form(pid):
     if not p:
         return redirect(url_for("pending"))
     cats_options = "".join(f"<option>{c}</option>" for c in kb_manager.get_categories())
+    # Файлы из каталога для привязки к ответу
+    file_catalog = kb_manager._kb.get("file_catalog", {}).get("files", [])
+    files_options = "<option value=''>— без файла —</option>" + "".join(
+        f"<option value='{f['id']}'>{_esc(f.get('name',''))}</option>"
+        for f in file_catalog
+    )
+    # Ответ бота О1 и О2 для предзаполнения формы
+    ai_answer  = _esc(p.get("ai_answer",  ""))
+    ai_answer2 = _esc(p.get("ai_answer2", ""))
+    action_label = {"sat_ok":"✅ Спасибо","sat_wrong":"❌ Не верно",
+                    "sat_clarify":"🔧 Уточнить"}.get(p.get("source_action",""),"—")
+    role_label = {"admin":"👤 Администратор","user":"💬 Пользователь"}.get(
+                    p.get("source_role",""),"—")
+
     html = _render_page("pending", f"""
-    <h5 class="fw-bold mb-4">➕ Добавить в БЗ из вопроса</h5>
-    <div class="alert alert-info">
-      <strong>Исходный вопрос:</strong> {p['message_text']}
+    <h5 class="fw-bold mb-4">➕ Добавить в БЗ</h5>
+    <div class="alert alert-info d-flex gap-3 flex-wrap">
+      <span><strong>Кнопка:</strong> {action_label}</span>
+      <span><strong>Роль:</strong> {role_label}</span>
+      <span><strong>Язык:</strong> {p.get('lang','ru')}</span>
     </div>
     <div class="card p-4">
     <form method="post" action="/pending/save/{pid}">
-      <div class="mb-3"><label class="form-label fw-semibold">Вопрос (можно отредактировать)</label>
-        <input name="question" class="form-control" value="{_esc(p['message_text'])}" required></div>
-      <div class="mb-3"><label class="form-label fw-semibold">Ответ *</label>
-        <textarea name="answer" class="form-control" rows="8" required placeholder="Введите подробный ответ..."></textarea></div>
-      <div class="row">
-        <div class="col-md-6 mb-3"><label class="form-label fw-semibold">Категория</label>
-          <select name="category" class="form-select">{cats_options}</select></div>
-        <div class="col-md-6 mb-3"><label class="form-label fw-semibold">Ключевые слова</label>
-          <input name="keywords" class="form-control" placeholder="слово1, слово2"></div>
+      <div class="mb-3">
+        <label class="form-label fw-semibold">Вопрос (можно отредактировать)</label>
+        <input name="question" class="form-control" value="{_esc(p['message_text'])}" required>
       </div>
-      <button class="btn btn-accent text-white">Сохранить в БЗ</button>
+      {'<div class="mb-3"><label class="form-label fw-semibold text-secondary">Ответ бота О1 (для справки)</label><textarea class="form-control form-control-sm bg-light" rows="4" readonly>' + ai_answer + '</textarea></div>' if ai_answer else ''}
+      {'<div class="mb-3"><label class="form-label fw-semibold text-secondary">Ответ бота О2 (для справки)</label><textarea class="form-control form-control-sm bg-light" rows="4" readonly>' + ai_answer2 + '</textarea></div>' if ai_answer2 else ''}
+      <div class="mb-3">
+        <label class="form-label fw-semibold">Ответ для базы знаний *</label>
+        <textarea name="answer" class="form-control" rows="8" required
+          placeholder="Введите подробный ответ...">{ai_answer}</textarea>
+      </div>
+      <div class="row">
+        <div class="col-md-4 mb-3">
+          <label class="form-label fw-semibold">Категория</label>
+          <select name="category" class="form-select">{cats_options}</select>
+        </div>
+        <div class="col-md-4 mb-3">
+          <label class="form-label fw-semibold">Ключевые слова</label>
+          <input name="keywords" class="form-control" placeholder="слово1, слово2">
+        </div>
+        <div class="col-md-4 mb-3">
+          <label class="form-label fw-semibold">Файл из каталога</label>
+          <select name="file_id" class="form-select">{files_options}</select>
+        </div>
+      </div>
+      <button class="btn btn-accent text-white">💾 Сохранить в БЗ</button>
       <a href="/pending" class="btn btn-outline-secondary ms-2">Отмена</a>
     </form></div>""")
     return html
@@ -423,14 +504,24 @@ def pending_add_form(pid):
 @app.route("/pending/save/<pid>", methods=["POST"])
 @login_required
 def pending_save(pid):
-    q = request.form.get("question","").strip()
-    a = request.form.get("answer","").strip()
-    cat = request.form.get("category","").strip()
-    kw = [k.strip() for k in request.form.get("keywords","").split(",") if k.strip()]
+    """
+    Сохраняет отредактированный ответ из 'На проверке' в базу знаний.
+    Поддерживает привязку файла из каталога через file_id.
+    """
+    q       = request.form.get("question", "").strip()
+    a       = request.form.get("answer",   "").strip()
+    cat     = request.form.get("category", "").strip()
+    kw      = [k.strip() for k in request.form.get("keywords","").split(",") if k.strip()]
+    file_id = request.form.get("file_id",  "").strip()
     if q and a and cat:
-        kb_manager.add_entry(cat, q, a, kw, source="learning")
+        entry = kb_manager.add_entry(cat, q, a, kw, source="learning")
+        # Привязываем файл если выбран
+        if file_id and entry:
+            kb_manager.update_entry(entry["id"], {"file_id": file_id})
         kb_manager.resolve_pending(pid, "added")
         flash("✅ Запись добавлена в базу знаний!", "success")
+    else:
+        flash("⚠️ Заполните все обязательные поля.", "warning")
     return redirect(url_for("pending"))
 
 @app.route("/pending/reject/<pid>")
@@ -955,8 +1046,12 @@ def files_delete(file_id):
         entry   = next((e for e in catalog["files"] if e["id"] == file_id), None)
         if entry:
             lpath = entry.get("local_path", "")
-            if lpath and os.path.exists(lpath):
-                os.remove(lpath)
+            if lpath:
+                # Проверяем что путь внутри CACHE_DIR (аудит C5)
+                cache_dir = Path(BASE_DIR) / "files_cache"
+                resolved  = (cache_dir / Path(lpath).name).resolve()
+                if resolved.is_relative_to(cache_dir.resolve()) and resolved.exists():
+                    os.remove(str(resolved))
             catalog["files"] = [e for e in catalog["files"] if e["id"] != file_id]
             _save_catalog(catalog)
     except Exception as e:
