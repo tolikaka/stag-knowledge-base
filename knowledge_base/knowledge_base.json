@@ -324,6 +324,25 @@
       "chat_id": -1004368283151,
       "timestamp": "2026-10-06T21:40:14.287037+00:00",
       "status": "new"
+    },
+    {
+      "id": "pend_9db04143",
+      "user_id": 39425955,
+      "username": "AnatoliyAndrianov",
+      "message_text": "propan reduktor bosimi nechi bulish keraq gbo-4 ucun",
+      "chat_id": -1004368283151,
+      "timestamp": "2026-10-07T09:51:08.805898+00:00",
+      "status": "admin_needs_clarify",
+      "ai_answer": "Propan reduktor bosimi GBO‑4 tizimida aniq qiymatni aytish uchun quyidagi ma’lumotlar zarur:\n\n1. **Mashina markasi, modeli, yili va dvigatel turi** (benzin, dizel, hajmi, yonilg‘i bosimi).  \n2. **Qaysi GBO‑4 versiyasi o‘rnatilgan** – original ishlab chiqaruvchi (STAG, BRC, K-Select va hokazo) yoki after‑market kitmi?  \n3. **Reduktor turini aniqlang** – yuqori bosimli (upstream) bosim regulator (propandan bosimni 2–3 bar ga pasaytiradi) yoki past bosimli (downstream) regulator (2 bar dan 0,5 bar gacha).  \n4. **Tizimda qo‘shimcha komponentlar bormi** – masalan, bosim regulyatori, xavfsizlik klapanlari, manometrlar.  \n\nUshbu ma’lumotlarni taqdim etsangiz, sizga kerakli bosim diapazonini (odatda 2,0 – 2,5 bar yoki 0,5 – 0,7 bar, lekin aniq qiymat GBO‑4 ning spetsifikasiga bog‘liq) va tekshirish tartibini batafsil tavsiya qila olaman.  \n\n*Iltimos, yuqoridagi savollarga javob bering.*"
+    },
+    {
+      "id": "pend_bd4f5e62",
+      "user_id": 39425955,
+      "username": "AnatoliyAndrianov",
+      "message_text": "[ТРЕБУЕТ УТОЧНЕНИЯ - ADMIN] propan reduktor bosimi nechi bulish keraq gbo-4 ucun",
+      "chat_id": -1004368283151,
+      "timestamp": "2026-10-07T09:51:44.577406+00:00",
+      "status": "new"
     }
   ]
 }

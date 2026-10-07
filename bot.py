@@ -3919,6 +3919,24 @@ async def handle_satisfaction_callback(
         "pl":          ("Administrator", "Użytkownik"),
     }
 
+    # Глагол "отметил/отметила" на языке вопроса
+    # Используется в строке: "Администратор отметил: ✅ Спасибо"
+    MARKED_VERB = {
+        "ru":          "отметил",
+        "uz_latin":    "belgiladi",
+        "uz_cyrillic": "белгилади",
+        "ru_translit": "otmetil",
+        "en":          "marked",
+        "uk":          "відзначив",
+        "be":          "адзначыў",
+        "de":          "markiert",
+        "kk":          "белгіледі",
+        "ky":          "белгиледи",
+        "tg":          "қайд кард",
+        "tk":          "belledi",
+        "pl":          "zaznaczył",
+    }
+
     # Название нажатой кнопки на языке вопроса
     BTN_LABEL = {
         "sat_ok": {
@@ -3955,12 +3973,14 @@ async def handle_satisfaction_callback(
     _role_str    = _role_labels[0] if is_admin_user else _role_labels[1]
     _btn_labels  = BTN_LABEL.get(action, {})
     _btn_str     = _btn_labels.get(lang, _btn_labels.get("ru", action))
-    _block_text  = f"{_role_str} отметил: {_btn_str}"
+    _verb        = MARKED_VERB.get(lang, MARKED_VERB["ru"])
+    _block_text  = f"{_role_str} {_verb}: {_btn_str}"
 
-    # Убираем кнопки — заменяем reply_markup на None и добавляем текст
+    # Убираем кнопки — заменяем reply_markup на None
+    # Текст роли будет добавлен в следующее сообщение каждого action
+    # (sat_clarify редактирует сообщение, sat_ok/sat_wrong отправляют новое)
     try:
         await query.edit_message_reply_markup(reply_markup=None)
-        await query.message.reply_text(_block_text)
     except Exception as _e:
         logger.debug("Не удалось убрать кнопки: %s", _e)
 
@@ -3995,7 +4015,7 @@ async def handle_satisfaction_callback(
                     source="admin_feedback",
                 )
                 THANKS_ADMIN = {
-                    "ru":          "✅ Ответ добавлен в базу знаний. Спасибо!",
+                    "ru":          f"{_block_text}\n✅ Ответ добавлен в базу знаний.",
                     "uz_latin":    "✅ Javob bilimlar bazasiga qo'shildi. Rahmat!",
                     "uz_cyrillic": "✅ Жавоб билимлар базасига қўшилди. Раҳмат!",
                     "ru_translit": "✅ Otvet dobavlen v bazu. Spasibo!",
@@ -4062,7 +4082,7 @@ async def handle_satisfaction_callback(
                         break
                 await kb_manager._save_local()
                 CLARIFY_ADMIN = {
-                    "ru":          "📋 Вопрос добавлен в раздел 'На проверке' с пометкой 'Требует уточнения'.",
+                    "ru":          f"{_block_text}\n📋 Вопрос добавлен в раздел 'На проверке' с пометкой 'Требует уточнения'.",
                     "uz_latin":    "📋 Savol 'Ko'rib chiqish' bo'limiga 'Aniqlashtirish kerak' belgisi bilan qo'shildi.",
                     "uz_cyrillic": "📋 Савол 'Кўриб чиқиш' бўлимига 'Аниқлаштириш керак' белгиси билан қўшилди.",
                     "ru_translit": "📋 Vopros dobavlen v 'Na proverke' s pometkey.",
