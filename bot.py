@@ -3976,13 +3976,16 @@ async def handle_satisfaction_callback(
     _verb        = MARKED_VERB.get(lang, MARKED_VERB["ru"])
     _block_text  = f"{_role_str} {_verb}: {_btn_str}"
 
-    # Убираем кнопки — заменяем reply_markup на None
-    # Текст роли будет добавлен в следующее сообщение каждого action
-    # (sat_clarify редактирует сообщение, sat_ok/sat_wrong отправляют новое)
+    # Убираем кнопки и сразу показываем кто и что нажал.
+    # Отдельное сообщение — надёжнее чем встраивать в каждый action.
     try:
         await query.edit_message_reply_markup(reply_markup=None)
     except Exception as _e:
         logger.debug("Не удалось убрать кнопки: %s", _e)
+    try:
+        await query.message.reply_text(_block_text)
+    except Exception as _e:
+        logger.debug("Не удалось отправить block_text: %s", _e)
 
 
     if action == "sat_ok":
@@ -4015,7 +4018,7 @@ async def handle_satisfaction_callback(
                     source="admin_feedback",
                 )
                 THANKS_ADMIN = {
-                    "ru":          f"{_block_text}\n✅ Ответ добавлен в базу знаний.",
+                    "ru":          "✅ Ответ добавлен в базу знаний.",
                     "uz_latin":    "✅ Javob bilimlar bazasiga qo'shildi. Rahmat!",
                     "uz_cyrillic": "✅ Жавоб билимлар базасига қўшилди. Раҳмат!",
                     "ru_translit": "✅ Otvet dobavlen v bazu. Spasibo!",
@@ -4082,7 +4085,7 @@ async def handle_satisfaction_callback(
                         break
                 await kb_manager._save_local()
                 CLARIFY_ADMIN = {
-                    "ru":          f"{_block_text}\n📋 Вопрос добавлен в раздел 'На проверке' с пометкой 'Требует уточнения'.",
+                    "ru":          "📋 Вопрос добавлен в раздел 'На проверке' с пометкой 'Требует уточнения'.",
                     "uz_latin":    "📋 Savol 'Ko'rib chiqish' bo'limiga 'Aniqlashtirish kerak' belgisi bilan qo'shildi.",
                     "uz_cyrillic": "📋 Савол 'Кўриб чиқиш' бўлимига 'Аниқлаштириш керак' белгиси билан қўшилди.",
                     "ru_translit": "📋 Vopros dobavlen v 'Na proverke' s pometkey.",

@@ -17,7 +17,7 @@
       "source": "manual",
       "created_at": "2024-01-01T00:00:00",
       "updated_at": "2024-01-01T00:00:00",
-      "usage_count": 2
+      "usage_count": 3
     },
     {
       "id": "kb_002",
@@ -70,7 +70,7 @@
       "source": "manual",
       "created_at": "2024-01-01T00:00:00",
       "updated_at": "2024-01-01T00:00:00",
-      "usage_count": 0
+      "usage_count": 2
     },
     {
       "id": "kb_005",
@@ -145,6 +145,27 @@
       "scope": "auto",
       "created_at": "2026-10-06T21:37:01.055957+00:00",
       "updated_at": "2026-10-06T21:37:01.055957+00:00",
+      "usage_count": 0
+    },
+    {
+      "id": "kb_20077fce",
+      "category": "Автодиагностика - Общее",
+      "question": "What kind of MAP sensor need to use with Onix 1,2l",
+      "keywords": [
+        "what",
+        "kind",
+        "map",
+        "sensor",
+        "need",
+        "use",
+        "with",
+        "onix"
+      ],
+      "answer": "📚 *Из базы знаний:*\n\nE-01 — Нет сигнала от датчика давления газа (MAP или датчик давления в рампе).\n\n🔧 Причины:\n• Обрыв или короткое замыкание в цепи датчика\n• Неисправный датчик давления\n• Плохой контакт разъёма\n\n📋 Диагностика:\n1. Проверить напряжение питания датчика (должно быть 5V)\n2. Проверить сигнальный провод (0.5–4.5V при работе)\n3. Проверить разъём на окисление\n4. Заменить датчик давления",
+      "source": "admin_feedback",
+      "scope": "auto",
+      "created_at": "2026-10-07T13:20:28.204958+00:00",
+      "updated_at": "2026-10-07T13:20:28.204958+00:00",
       "usage_count": 0
     }
   ],
@@ -333,7 +354,7 @@
       "chat_id": -1004368283151,
       "timestamp": "2026-10-07T09:51:08.805898+00:00",
       "status": "admin_needs_clarify",
-      "ai_answer": "Propan reduktor bosimi GBO‑4 tizimida aniq qiymatni aytish uchun quyidagi ma’lumotlar zarur:\n\n1. **Mashina markasi, modeli, yili va dvigatel turi** (benzin, dizel, hajmi, yonilg‘i bosimi).  \n2. **Qaysi GBO‑4 versiyasi o‘rnatilgan** – original ishlab chiqaruvchi (STAG, BRC, K-Select va hokazo) yoki after‑market kitmi?  \n3. **Reduktor turini aniqlang** – yuqori bosimli (upstream) bosim regulator (propandan bosimni 2–3 bar ga pasaytiradi) yoki past bosimli (downstream) regulator (2 bar dan 0,5 bar gacha).  \n4. **Tizimda qo‘shimcha komponentlar bormi** – masalan, bosim regulyatori, xavfsizlik klapanlari, manometrlar.  \n\nUshbu ma’lumotlarni taqdim etsangiz, sizga kerakli bosim diapazonini (odatda 2,0 – 2,5 bar yoki 0,5 – 0,7 bar, lekin aniq qiymat GBO‑4 ning spetsifikasiga bog‘liq) va tekshirish tartibini batafsil tavsiya qila olaman.  \n\n*Iltimos, yuqoridagi savollarga javob bering.*"
+      "ai_answer": "GBO-4 (4-avlod) uchun propan reduktor bosimi aniq bir son bilan emas, balki **dvigatel aylanish tezligiga (RPM)** va **yuklamaga** qarab o'zgaradi.\n\nAniq qiymatni berish uchun quyidagi ma'lumotlarni berishingiz kerak:\n1. **Avto markasi, modeli va yili.**\n2. **Dvigatel hajmi va kuchi (kV).**\n3. **Qaysi reduktor o'rnatilgan?** (Masalan: Lovato, STAG, KME, Prins va h.k.)\n4. **Dvigatel holati:** Sovuqmi yoki isitilganmi?\n\n### Umumiya ma'lumot (Faqat yo'nalish uchun):\n\n4-avlod tizimida reduktor bosimi odatda quyidagicha bo'ladi:\n\n*   **Bo'sh yurishda (800-1000 RPM):**\n    *   Odatda **0.5 – 1.0 bar** atrofida bo'ladi.\n    *   Ba'zi tizimlarda (masalan, STAG) bo'sh yurishda bosim juda past bo'lishi yoki hatto 0 ga yaqinlashishi mumkin (agar tizim \"low pressure\" rejimida ishlasa).\n\n*   **Yuklama ostida (2000-3000 RPM):**\n    *   **1.5 – 3.0 bar** oralig'ida bo'ladi.\n    *   Kuchliroq dvigatellarda (2.0L va undan yuqori) bosim **3.0 – 4.0 bar** gacha chiqishi mumkin.\n\n*   **Maksimal bosim:**\n    *   Odatda **4.0 – 5.0 bar** dan oshmasligi kerak. Agar bosim 5 bar dan yuqori bo'lsa, bu reduktor yoki tizimda muammo borligini ko'rsatadi.\n\n### Muhim eslatma:\n*   **Propan (LPG)** va **Metan (CNG)** tizimlari farq qiladi. Siz propan haqida so'radingiz.\n*   **STAG tizimlari** uchun: STAG 400/4000 seriyasida bosim parametrlari ECU sozlamalariga bog'liq. Odatda, bo'sh yurishda 0.5-0.8 bar, yuklama ostida 2.5-3.5 bar atrofida bo'ladi.\n*   **Diqqat:** Agar bosim juda past bo'lsa, dvigatel \"tutadi\" yoki tezlikka chiqmaydi. Agar bosim juda yuqori bo'lsa, injektorlar buzilishi yoki gaz oqimi ortib ketishi mumkin.\n\n**Ruxsat berilgan javob:**\nAniq qiymatni bilish uchun **qaysi brendli reduktor** o'rnatilganini va **dvigatel parametrlarini** yozing. Shuningdek, **Data Stream** (real vaqt ma'lumotlari) orqali reduktor bosimini (Fuel Pressure / LPG Pressure) tekshirish tavsiya etiladi.\n\nAgar siz **STAG** tizimini ishlatayotgan bo'lsangiz, 4-avlodda odatda:\n*   Bo'sh yurish: **0.5 - 1.0 bar**\n*   Ish yuklamasi: **2.0 - 3.5 bar**\n\nBu qiymatlar dvigatel isitilgan holatda bo'lishi kerak."
     },
     {
       "id": "pend_bd4f5e62",
