@@ -1,4 +1,4 @@
-# FILE: knowledge_manager.py | VERSION: 1.3.7 | DATE: 2026-10-14
+# FILE: knowledge_manager.py | VERSION: 1.3.8 | DATE: 2026-10-14
 # ==============================================================================
 #  knowledge_manager.py  —  Управление базой знаний AI_Diag_UZ
 # ==============================================================================
@@ -473,14 +473,32 @@ class KnowledgeManager:
         """
         Синхронная обёртка для сохранения БЗ на диск.
         Вызывается из синхронных методов-мутаторов.
-        Использует текущий event loop если он запущен,
-        иначе создаёт новый.
+
+        ИСПРАВЛЕНИЕ v1.3.8: при запущенном event loop (asyncio.run / await)
+        create_task() не блокируется — файл записывался ПОСЛЕ того как
+        вызывающий код читал его с диска. Теперь используем поток-воркер
+        через concurrent.futures, что гарантирует синхронное завершение
+        записи до возврата из этого метода.
         """
         import asyncio as _asyncio
+        import concurrent.futures as _cf
+
+        def _run_in_new_loop():
+            new_loop = _asyncio.new_event_loop()
+            try:
+                new_loop.run_until_complete(self._save_local())
+            finally:
+                new_loop.close()
+
         try:
             loop = _asyncio.get_event_loop()
             if loop.is_running():
-                loop.create_task(self._save_local())
+                # Loop уже запущен (мы внутри async-функции).
+                # Запускаем сохранение в отдельном потоке с новым loop —
+                # это единственный способ синхронно дождаться coroutine.
+                with _cf.ThreadPoolExecutor(max_workers=1) as executor:
+                    future = executor.submit(_run_in_new_loop)
+                    future.result()  # Блокируемся до завершения записи
             else:
                 loop.run_until_complete(self._save_local())
         except RuntimeError:
