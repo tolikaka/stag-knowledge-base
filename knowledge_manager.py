@@ -1051,10 +1051,27 @@ class KnowledgeManager:
         """
         pending_list = self._kb.setdefault("pending_learning", [])
 
-        # Проверяем на дубликаты — одинаковые вопросы не сохраняем
+        # Проверяем на дубликаты — если запись есть, обновляем её
+        # (при нажатии кнопки оценки приходит тот же текст вопроса)
         for existing in pending_list:
             if existing["message_text"].lower() == message_text.lower():
-                return  # Такой вопрос уже есть
+                # Обновляем поля если они не были заполнены ранее
+                if source_action:
+                    existing["source_action"] = source_action
+                if source_role:
+                    existing["source_role"] = source_role
+                if ai_answer and not existing.get("ai_answer"):
+                    existing["ai_answer"] = ai_answer
+                if ai_answer2:
+                    existing["ai_answer2"] = ai_answer2
+                if lang and lang != "ru":
+                    existing["lang"] = lang
+                logger.info(
+                    "Обновлена запись pending: %s → action=%s role=%s",
+                    message_text[:40], source_action, source_role
+                )
+                self._save_sync()
+                return  # Запись обновлена, новую не создаём
 
         # Создаём запись о вопросе
         pending_entry = {

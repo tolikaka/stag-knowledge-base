@@ -4127,6 +4127,10 @@ async def handle_satisfaction_callback(
                 )
                 # ai_answer уже передан через add_pending_question
                 # Статус остаётся "new" чтобы отображался в таблице
+                logger.info(
+                    "sat_clarify: вопрос добавлен/обновлён в pending | "
+                    "question=%s | lang=%s", question[:40], lang
+                )
                 await kb_manager._save_local()
                 CLARIFY_ADMIN = {
                     "ru":          "📋 Вопрос добавлен в раздел 'На проверке' с пометкой 'Требует уточнения'.",
@@ -4303,7 +4307,7 @@ async def handle_satisfaction_callback(
                     chat_id=chat_id,
                     ai_answer=answer,
                     source_action="sat_wrong",
-                    source_role="admin",
+                    source_role="admin" if is_admin_user else "user",
                     lang=lang,
                 )
             except Exception as e:
