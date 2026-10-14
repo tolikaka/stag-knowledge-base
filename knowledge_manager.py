@@ -1,4 +1,4 @@
-# FILE: knowledge_manager.py | VERSION: 1.2.0 | DATE: 2026-10-04
+# FILE: knowledge_manager.py | VERSION: 1.3.7 | DATE: 2026-10-14
 # ==============================================================================
 #  knowledge_manager.py  —  Управление базой знаний AI_Diag_UZ
 # ==============================================================================
@@ -500,13 +500,16 @@ class KnowledgeManager:
 
         # Записываем JSON с форматированием (indent=2 — отступ 2 пробела)
         # ensure_ascii=False — сохраняем кириллицу как есть (не как \u0441...)
-        # Атомарная запись: пишем во временный файл, затем переименовываем.
-        # Это предотвращает повреждение файла при сбое в момент записи.
-        tmp_path = path.with_suffix(".tmp")
-        data = json.dumps(self._kb, ensure_ascii=False, indent=2)
-        async with aiofiles.open(tmp_path, "w", encoding="utf-8") as f:
-            await f.write(data)
-        tmp_path.replace(path)  # атомарная операция на уровне ОС
+        # ИСПРАВЛЕНИЕ v1.3.7: убрана атомарная запись через .tmp файл.
+        # Причина: path.replace() вызывает FileNotFoundError на Windows когда
+        # файл заблокирован другим процессом или пути на разных томах.
+        # Прямая запись через aiofiles безопасна для asyncio.
+        try:
+            async with aiofiles.open(path, "w", encoding="utf-8") as f:
+                await f.write(json.dumps(self._kb, ensure_ascii=False, indent=2))
+        except Exception as e:
+            logger.error("Ошибка сохранения БЗ на диск: %s", e)
+            raise  # пробрасываем ошибку вызывающему коду
 
     # ==========================================================================
     #  СИНХРОНИЗАЦИЯ С GITHUB

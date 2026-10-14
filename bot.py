@@ -3909,7 +3909,7 @@ async def handle_satisfaction_callback(
     }.get(action)
     if stat_key:
         try:
-            kb_manager.record_feedback(question, stat_key)
+            await kb_manager.record_feedback(question, stat_key)
         except Exception as e:
             logger.warning(f"Ошибка записи статистики: {e}")
     logger.info(
