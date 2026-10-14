@@ -1,4 +1,4 @@
-# FILE: test_d1.py | VERSION: 1.0.0 | DATE: 2026-10-14
+# FILE: test_d1.py | VERSION: 1.1.0 | DATE: 2026-10-14
 # ==============================================================================
 #  test_d1.py — Тесты для пакета D1
 # ==============================================================================
@@ -297,6 +297,69 @@ async def test_save_after_button_press():
         )
 
 
+# ------------------------------------------------------------------------------
+# ТЕСТ 6: повторное нажатие кнопки на rejected-запись сбрасывает статус в new
+# ------------------------------------------------------------------------------
+async def test_rejected_reset_to_new():
+    """
+    Кейс: запись была отклонена администратором (status=rejected).
+    Пользователь задал тот же вопрос снова и нажал кнопку.
+    Статус должен сброситься в "new" чтобы запись снова появилась
+    в разделе "На проверке" (фильтр status=="new").
+    """
+    print("\n[ТЕСТ 6] Повторная кнопка на rejected-записи → статус сбрасывается в new")
+    with tempfile.TemporaryDirectory() as tmp_dir:
+        mgr, kb_path = make_manager(tmp_dir)
+        await mgr.load()
+
+        question = "что такое ошибка P0300?"
+
+        # Шаг 1: создаём запись и сразу ставим ей статус rejected
+        mgr.add_pending_question(
+            user_id=39425955,
+            username="admin",
+            message_text=question,
+            chat_id=-100123456,
+            source_action="auto",
+            source_role="system",
+            ai_answer="P0300 — пропуск воспламенения",
+        )
+        # Имитируем что администратор нажал "Отклонить" в админке
+        pending = mgr.get_pending()
+        pending[0]["status"] = "rejected"
+        mgr._save_sync()
+
+        # Шаг 2: пользователь снова нажал кнопку "Не верно"
+        mgr.add_pending_question(
+            user_id=39425955,
+            username="admin",
+            message_text=question,
+            chat_id=-100123456,
+            source_action="sat_wrong",
+            source_role="admin",
+        )
+
+        # Проверяем: статус должен стать "new"
+        updated = mgr.get_pending()
+        assert_true(len(updated) == 1, "Запись одна (не создана дублирующая)")
+        assert_true(
+            updated[0]["status"] == "new",
+            "Статус сброшен с 'rejected' → 'new'"
+        )
+        assert_true(
+            updated[0]["source_action"] == "sat_wrong",
+            "source_action обновился на sat_wrong"
+        )
+
+        # Читаем с диска — убеждаемся что "new" записан на диск
+        with open(kb_path, encoding="utf-8") as f:
+            data = json.load(f)
+        assert_true(
+            data["pending_learning"][0]["status"] == "new",
+            "Статус 'new' сохранён на диск"
+        )
+
+
 # ==============================================================================
 #  ЗАПУСК ВСЕХ ТЕСТОВ
 # ==============================================================================
@@ -312,6 +375,7 @@ async def run_all():
     await test_pending_all_fields()
     await test_pending_duplicate_updates()
     await test_save_after_button_press()
+    await test_rejected_reset_to_new()
 
     print("\n" + "=" * 60)
     print(f"  ИТОГО: {passed} PASSED  |  {failed} FAILED")

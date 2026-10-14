@@ -1,4 +1,4 @@
-# FILE: knowledge_manager.py | VERSION: 1.3.8 | DATE: 2026-10-14
+# FILE: knowledge_manager.py | VERSION: 1.3.9 | DATE: 2026-10-14
 # ==============================================================================
 #  knowledge_manager.py  —  Управление базой знаний AI_Diag_UZ
 # ==============================================================================
@@ -1076,6 +1076,20 @@ class KnowledgeManager:
         # (при нажатии кнопки оценки приходит тот же текст вопроса)
         for existing in pending_list:
             if existing["message_text"].lower() == message_text.lower():
+                # ИСПРАВЛЕНИЕ v1.3.9: сбрасываем статус в "new" если запись
+                # была ранее отклонена/добавлена администратором.
+                # Причина: повторное нажатие кнопки (sat_wrong/sat_clarify)
+                # на уже обработанный вопрос должно вернуть его в очередь,
+                # иначе запись остаётся со статусом "rejected"/"added" и
+                # не отображается в разделе "На проверке" (фильтр status=="new").
+                old_status = existing.get("status", "new")
+                if old_status in ("rejected", "added", "admin_needs_clarify"):
+                    existing["status"] = "new"
+                    logger.info(
+                        "Сброс статуса pending: %s → new (было: %s)",
+                        message_text[:40], old_status
+                    )
+
                 # Обновляем поля если они не были заполнены ранее
                 if source_action:
                     existing["source_action"] = source_action

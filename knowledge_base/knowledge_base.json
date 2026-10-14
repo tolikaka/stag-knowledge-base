@@ -381,7 +381,7 @@
       "message_text": "что такое ошибка P0300?",
       "chat_id": -1004368283151,
       "timestamp": "2026-10-07T17:13:06.172522+00:00",
-      "status": "rejected",
+      "status": "new",
       "lang": "ru",
       "source_action": "sat_clarify",
       "source_role": "admin",
