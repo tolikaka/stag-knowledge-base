@@ -1,4 +1,4 @@
-# FILE: knowledge_manager.py | VERSION: 1.3.9 | DATE: 2026-10-14
+# FILE: knowledge_manager.py | VERSION: 1.4.0 | DATE: 2026-10-15
 # ==============================================================================
 #  knowledge_manager.py  —  Управление базой знаний AI_Diag_UZ
 # ==============================================================================
@@ -1139,6 +1139,34 @@ class KnowledgeManager:
             list[dict]: список всех pending-записей (все статусы)
         """
         return self._kb.get("pending_learning", [])
+
+    def update_pending_fields(self, pending_id: str, **fields) -> bool:
+        """
+        Обновляет произвольные поля pending-записи.
+
+        Используется из веб-админки (/pending/edit) для редактирования
+        вопроса, ответов и метаданных до добавления в БЗ.
+
+        Аргументы:
+            pending_id: ID записи (например "pend_a1b2c3d4")
+            **fields:   поля для обновления (message_text, ai_answer, lang, ...)
+
+        Возвращает:
+            True  — успешно обновлено
+            False — запись не найдена
+        """
+        for entry in self._kb.get("pending_learning", []):
+            if entry["id"] == pending_id:
+                for key, value in fields.items():
+                    entry[key] = value
+                logger.info(
+                    "Обновлены поля pending %s: %s",
+                    pending_id, list(fields.keys())
+                )
+                self._save_sync()
+                return True
+        logger.warning("pending_id не найден для обновления: %s", pending_id)
+        return False
 
     def resolve_pending(self, pending_id: str, status: str) -> bool:
         """

@@ -7,6 +7,15 @@ admin.py — Веб-админка базы знаний AI_Diag_UZ
 • Ручная синхронизация с GitHub
 • Доступна по http://localhost:8080
   Для внешнего доступа: используйте ngrok или Cloudflare Tunnel
+
+ВЕРСИЯ: 1.4.0
+ДАТА:   2026-10-15
+ИЗМЕНЕНИЯ:
+  D2.1 — update_pending_fields() в knowledge_manager (отдельный файл)
+  D2.2 — маршрут /pending/edit/<pid> (GET+POST) для редактирования pending
+  D2.3 — смарт-кнопка "Добавить в БЗ": проверяет find_best() перед добавлением,
+          редиректит на /entries/edit/<id> если похожая запись уже есть в БЗ
+  D2.4 — исправлен баг в pending_save: update_entry(id, dict) → update_entry(id, **kwargs)
 """
 
 import hashlib
@@ -183,24 +192,6 @@ def dashboard():
         f'<div class="d-flex justify-content-between"><span>{k}</span><strong>{v}</strong></div>'
         for k,v in s["categories"].items()
     )
-    content = f"""
-    {{% extends BASE_HTML %}}
-    <div class="row g-3 mb-4">
-      <div class="col-md-3"><div class="card stat-card p-3"><div class="text-muted small">Записей в БЗ</div><div class="fs-2 fw-bold text-primary">{s['total_entries']}</div></div></div>
-      <div class="col-md-3"><div class="card stat-card p-3"><div class="text-muted small">На проверке</div><div class="fs-2 fw-bold text-warning">{s['pending_new']}</div></div></div>
-      <div class="col-md-3"><div class="card stat-card p-3"><div class="text-muted small">Категорий</div><div class="fs-2 fw-bold text-success">{len(s['categories'])}</div></div></div>
-      <div class="col-md-3"><div class="card stat-card p-3"><div class="text-muted small">Синхр. GitHub</div><div class="small text-muted mt-1">{s['last_sync'][:16] if s['last_sync'] != '—' else '—'}</div></div></div>
-    </div>
-    <div class="row g-3">
-      <div class="col-md-6"><div class="card p-3"><h6 class="fw-bold mb-3">📂 По категориям</h6>{cats_html}</div></div>
-      <div class="col-md-6"><div class="card p-3"><h6 class="fw-bold mb-3">⚡ Быстрые действия</h6>
-        <a href="/entries/add" class="btn btn-accent mb-2 w-100"><i class="bi bi-plus-lg me-2"></i>Добавить запись</a>
-        <a href="/pending" class="btn btn-outline-warning mb-2 w-100"><i class="bi bi-clock me-2"></i>Проверить вопросы</a>
-        <a href="/sync" class="btn btn-outline-primary w-100"><i class="bi bi-cloud-upload me-2"></i>Синхронизировать</a>
-      </div></div>
-    </div>"""
-
-    # Упрощённый рендер
     html = _render_page("dashboard", f"""
     <div class="row g-3 mb-4">
       <div class="col-md-3"><div class="card stat-card p-3"><div class="text-muted small">Записей в БЗ</div><div class="fs-2 fw-bold text-primary">{s['total_entries']}</div></div></div>
@@ -377,6 +368,8 @@ def pending():
     Показывает все вопросы со статусом 'new'.
     Таблица содержит: время, вопрос, ответ бота О1,
     действие (кнопка), роль, язык, кнопки управления.
+
+    v1.4.0: добавлена кнопка ✏️ Редактировать (3 кнопки: edit, add, reject).
     """
     items = [p for p in kb_manager.get_pending() if p["status"] == "new"]
     rows = ""
@@ -386,11 +379,13 @@ def pending():
         "sat_ok":      "✅ Спасибо",
         "sat_wrong":   "❌ Не верно",
         "sat_clarify": "🔧 Уточнить",
+        "auto":        "🤖 Авто",
     }
     # Словарь иконок ролей
     ROLE_ICONS = {
-        "admin": "👤 Админ",
-        "user":  "💬 Польз.",
+        "admin":  "👤 Админ",
+        "user":   "💬 Польз.",
+        "system": "🤖 Система",
     }
 
     for p in items:
@@ -417,16 +412,18 @@ def pending():
           <td class="small">{ai_cell}</td>
           <td class="small text-nowrap">{action_badge}</td>
           <td class="small text-nowrap">{role_badge}</td>
-          <td>
+          <td style="white-space:nowrap">
+            <a href="/pending/edit/{p['id']}" class="btn btn-sm btn-outline-secondary me-1"
+               title="Редактировать"><i class="bi bi-pencil"></i></a>
             <a href="/pending/add/{p['id']}" class="btn btn-sm btn-outline-success me-1"
                title="Добавить в БЗ"><i class="bi bi-plus-lg"></i></a>
             <a href="/pending/reject/{p['id']}" class="btn btn-sm btn-outline-danger"
-               title="Удалить"><i class="bi bi-x-lg"></i></a>
+               title="Отклонить"><i class="bi bi-x-lg"></i></a>
           </td></tr>"""
 
     html = _render_page("pending", f"""
     <h5 class="fw-bold mb-3">⏳ На проверке ({len(items)})</h5>
-    <p class="text-muted small">Вопросы пользователей с ответами бота. Добавьте лучшие в базу знаний.</p>
+    <p class="text-muted small">Вопросы пользователей с ответами бота. Отредактируйте и добавьте лучшие в базу знаний.</p>
     <div class="card"><div class="table-responsive">
     <table class="table table-hover table-sm mb-0">
     <thead class="table-light"><tr>
@@ -440,13 +437,151 @@ def pending():
     </table></div></div>""")
     return html
 
+
+@app.route("/pending/edit/<pid>", methods=["GET", "POST"])
+@login_required
+def pending_edit(pid):
+    """
+    D2.2 — Редактирование pending-записи.
+
+    GET:  форма с текущими значениями вопроса, ответов, языка.
+    POST: сохраняет изменения через update_pending_fields(),
+          статус записи остаётся "new" — запись остаётся в разделе "На проверке".
+
+    Назначение: подготовить ответ для добавления в БЗ без создания черновика
+    в самой базе знаний. Администратор редактирует ответ и нажимает
+    ➕ "Добавить в БЗ" из таблицы или кнопку на этой же странице.
+    """
+    pending_items = kb_manager.get_pending()
+    p = next((x for x in pending_items if x["id"] == pid), None)
+    if not p:
+        flash("Запись не найдена", "danger")
+        return redirect(url_for("pending"))
+
+    if request.method == "POST":
+        message_text = request.form.get("message_text", "").strip()
+        ai_answer    = request.form.get("ai_answer",    "").strip()
+        ai_answer2   = request.form.get("ai_answer2",   "").strip()
+        lang         = request.form.get("lang",         "ru").strip()
+
+        if not message_text:
+            flash("⚠️ Вопрос не может быть пустым.", "warning")
+        else:
+            kb_manager.update_pending_fields(
+                pid,
+                message_text=message_text,
+                ai_answer=ai_answer,
+                ai_answer2=ai_answer2,
+                lang=lang,
+            )
+            flash("✅ Черновик сохранён. Нажмите ➕ чтобы добавить в БЗ.", "success")
+            return redirect(url_for("pending"))
+
+    # GET — рендер формы
+    lang_options = "".join(
+        f'<option value="{c}" {"selected" if c == p.get("lang","ru") else ""}>{c}</option>'
+        for c in ["ru","uz_cyrillic","uz_latin","ru_translit","en","uk","be","de","kk","ky","tg","tk","pl"]
+    )
+    action_label = {
+        "sat_ok":      "✅ Спасибо",
+        "sat_wrong":   "❌ Не верно",
+        "sat_clarify": "🔧 Уточнить",
+        "auto":        "🤖 Авто",
+    }.get(p.get("source_action",""), "—")
+    role_label = {
+        "admin":  "👤 Администратор",
+        "user":   "💬 Пользователь",
+        "system": "🤖 Система",
+    }.get(p.get("source_role",""), "—")
+
+    html = _render_page("pending", f"""
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h5 class="fw-bold">✏️ Редактировать черновик</h5>
+      <a href="/pending" class="btn btn-outline-secondary btn-sm">← Назад</a>
+    </div>
+    <div class="alert alert-info d-flex gap-3 flex-wrap align-items-center small">
+      <span><strong>ID:</strong> <code>{_esc(pid)}</code></span>
+      <span><strong>Кнопка:</strong> {action_label}</span>
+      <span><strong>Роль:</strong> {role_label}</span>
+      <span><strong>Пользователь:</strong> {_esc(p.get('username',''))}</span>
+      <span><strong>Время:</strong> {p.get('timestamp','')[:16]}</span>
+    </div>
+    <div class="card p-4">
+    <form method="post" action="/pending/edit/{pid}">
+      <div class="mb-3">
+        <label class="form-label fw-semibold">Вопрос пользователя</label>
+        <input name="message_text" class="form-control"
+               value="{_esc(p.get('message_text',''))}" required>
+        <div class="form-text">Можно скорректировать формулировку для лучшего поиска в БЗ.</div>
+      </div>
+      <div class="mb-3">
+        <label class="form-label fw-semibold">Ответ бота О1 <span class="text-muted fw-normal">(редактируемый)</span></label>
+        <textarea name="ai_answer" class="form-control" rows="6"
+                  placeholder="Ответ для добавления в базу знаний...">{_esc(p.get('ai_answer',''))}</textarea>
+        <div class="form-text">Отредактируйте ответ перед добавлением в БЗ.</div>
+      </div>
+      <div class="mb-3">
+        <label class="form-label fw-semibold">Ответ бота О2 <span class="text-muted fw-normal">(после уточнения)</span></label>
+        <textarea name="ai_answer2" class="form-control" rows="4"
+                  placeholder="Второй ответ (если был запрос на уточнение)...">{_esc(p.get('ai_answer2',''))}</textarea>
+      </div>
+      <div class="mb-4">
+        <label class="form-label fw-semibold">Язык</label>
+        <select name="lang" class="form-select" style="width:auto">{lang_options}</select>
+      </div>
+      <div class="d-flex gap-2 flex-wrap">
+        <button type="submit" class="btn btn-primary">
+          <i class="bi bi-floppy me-1"></i>💾 Сохранить черновик
+        </button>
+        <a href="/pending/add/{pid}" class="btn btn-success">
+          <i class="bi bi-plus-lg me-1"></i>➕ Добавить в БЗ
+        </a>
+        <a href="/pending/reject/{pid}" class="btn btn-outline-danger">
+          <i class="bi bi-x-lg me-1"></i>✗ Отклонить
+        </a>
+        <a href="/pending" class="btn btn-outline-secondary">Отмена</a>
+      </div>
+    </form></div>""")
+    return html
+
+
 @app.route("/pending/add/<pid>")
 @login_required
 def pending_add_form(pid):
+    """
+    D2.3 — Смарт-кнопка "Добавить в БЗ".
+
+    Перед тем как показать форму добавления, проверяет наличие похожей
+    записи в БЗ через find_best(). Если запись найдена (score >= threshold):
+      → редиректит на /entries/edit/<id> (обновить существующую)
+    Если нет:
+      → показывает стандартную форму добавления новой записи.
+
+    Преимущество: администратор видит "вы уже отвечали на этот вопрос"
+    и может обновить существующую запись БЗ вместо создания дубликата.
+    """
     pending_items = kb_manager.get_pending()
     p = next((x for x in pending_items if x["id"] == pid), None)
     if not p:
         return redirect(url_for("pending"))
+
+    # ── D2.3: проверка совпадения в БЗ ───────────────────────────────────────
+    message_text = p.get("message_text", "")
+    best_match = kb_manager.find_best(message_text)
+
+    if best_match:
+        # Найдена похожая запись в БЗ → редиректим на её редактирование
+        flash(
+            f"💡 В БЗ уже есть похожая запись: «{best_match.get('question','')[:60]}». "
+            f"Отредактируйте её или сохраните как новую через форму ниже.",
+            "info"
+        )
+        # Сохраняем pid в сессии чтобы после редактирования можно было
+        # разрешить pending через кнопку на странице /entries/edit
+        session["pending_resolve_pid"] = pid
+        return redirect(url_for("entry_edit", entry_id=best_match["id"]))
+
+    # ── Нет совпадения → обычная форма добавления ────────────────────────────
     cats_options = "".join(f"<option>{c}</option>" for c in kb_manager.get_categories())
     # Файлы из каталога для привязки к ответу
     file_catalog = kb_manager._kb.get("file_catalog", {}).get("files", [])
@@ -458,9 +593,10 @@ def pending_add_form(pid):
     ai_answer  = _esc(p.get("ai_answer",  ""))
     ai_answer2 = _esc(p.get("ai_answer2", ""))
     action_label = {"sat_ok":"✅ Спасибо","sat_wrong":"❌ Не верно",
-                    "sat_clarify":"🔧 Уточнить"}.get(p.get("source_action",""),"—")
-    role_label = {"admin":"👤 Администратор","user":"💬 Пользователь"}.get(
-                    p.get("source_role",""),"—")
+                    "sat_clarify":"🔧 Уточнить","auto":"🤖 Авто"}.get(
+                    p.get("source_action",""),"—")
+    role_label = {"admin":"👤 Администратор","user":"💬 Пользователь",
+                  "system":"🤖 Система"}.get(p.get("source_role",""),"—")
 
     html = _render_page("pending", f"""
     <h5 class="fw-bold mb-4">➕ Добавить в БЗ</h5>
@@ -469,14 +605,14 @@ def pending_add_form(pid):
       <span><strong>Роль:</strong> {role_label}</span>
       <div class="d-flex align-items-center gap-1">
         <strong>Язык:</strong>
-        <select name="lang_override" class="form-select form-select-sm" style="width:auto">
+        <select name="lang_override" form="pending-save-form" class="form-select form-select-sm" style="width:auto">
           {"".join(f'<option value="{c}" {"selected" if c == p.get("lang","ru") else ""}>{c}</option>'
             for c in ["ru","uz_cyrillic","uz_latin","ru_translit","en","uk","be","de","kk","ky","tg","tk","pl"])}
         </select>
       </div>
     </div>
     <div class="card p-4">
-    <form method="post" action="/pending/save/{pid}">
+    <form id="pending-save-form" method="post" action="/pending/save/{pid}">
       <div class="mb-3">
         <label class="form-label fw-semibold">Вопрос (можно отредактировать)</label>
         <input name="question" class="form-control" value="{_esc(p['message_text'])}" required>
@@ -502,10 +638,14 @@ def pending_add_form(pid):
           <select name="file_id" class="form-select">{files_options}</select>
         </div>
       </div>
-      <button class="btn btn-accent text-white">💾 Сохранить в БЗ</button>
-      <a href="/pending" class="btn btn-outline-secondary ms-2">Отмена</a>
+      <div class="d-flex gap-2">
+        <button class="btn btn-accent text-white">💾 Сохранить в БЗ</button>
+        <a href="/pending/edit/{pid}" class="btn btn-outline-secondary">← Вернуться к редактированию</a>
+        <a href="/pending" class="btn btn-outline-secondary">Отмена</a>
+      </div>
     </form></div>""")
     return html
+
 
 @app.route("/pending/save/<pid>", methods=["POST"])
 @login_required
@@ -513,6 +653,8 @@ def pending_save(pid):
     """
     Сохраняет отредактированный ответ из 'На проверке' в базу знаний.
     Поддерживает привязку файла из каталога и переопределение языка.
+
+    v1.4.0 fix D2.4: исправлен баг update_entry(id, dict) → update_entry(id, **kwargs)
     """
     q            = request.form.get("question",      "").strip()
     a            = request.form.get("answer",        "").strip()
@@ -523,13 +665,34 @@ def pending_save(pid):
     if q and a and cat:
         entry = kb_manager.add_entry(cat, q, a, kw, source="learning")
         # Привязываем файл если выбран
+        # ИСПРАВЛЕНИЕ D2.4: было update_entry(id, {"file_id": ...}) — dict вместо kwargs
         if file_id and entry:
-            kb_manager.update_entry(entry["id"], {"file_id": file_id})
+            kb_manager.update_entry(entry["id"], file_id=file_id)
+        # Сохраняем язык если выбран
+        if lang_override and entry:
+            kb_manager.update_entry(entry["id"], lang=lang_override)
         kb_manager.resolve_pending(pid, "added")
+        # Если был редирект со смарт-кнопки — чистим сессию
+        session.pop("pending_resolve_pid", None)
         flash("✅ Запись добавлена в базу знаний!", "success")
     else:
         flash("⚠️ Заполните все обязательные поля.", "warning")
     return redirect(url_for("pending"))
+
+
+@app.route("/pending/resolve_after_edit/<pid>")
+@login_required
+def pending_resolve_after_edit(pid):
+    """
+    D2.3 — Вспомогательный маршрут.
+    Вызывается когда администратор отредактировал существующую запись БЗ
+    (после редиректа со смарт-кнопки) и хочет пометить pending как "added".
+    """
+    kb_manager.resolve_pending(pid, "added")
+    session.pop("pending_resolve_pid", None)
+    flash("✅ Запись в БЗ обновлена, вопрос отмечен как обработанный.", "success")
+    return redirect(url_for("pending"))
+
 
 @app.route("/pending/reject/<pid>")
 @login_required
@@ -975,11 +1138,8 @@ def files_sync():
             updated += 1
         else:
             # Файла НЕТ в каталоге — добавляем автоматически
-            # Название из имени файла
-            # Название: убираем версию из имени если есть буквы (человекочитаемое)
             raw_name  = fpath.stem.replace("_", " ").replace("-", " ")
-            auto_name = " ".join(w for w in raw_name.split() if w)  # убираем двойные пробелы
-            # Ключевые слова из имени файла — разбиваем по _ - и пробелу
+            auto_name = " ".join(w for w in raw_name.split() if w)
             auto_kws = list(dict.fromkeys(
                 w.lower() for w in re.split(r"[_\-\s]+", fpath.stem)
                 if len(w) > 2
@@ -1004,13 +1164,11 @@ def files_sync():
             added += 1
 
     # ── Шаг 2: обновляем все записи каталога через абсолютный путь ──────────
-    # Перечитываем каталог (мог обновиться в шаге 1)
     catalog = _load_catalog()
     for entry in catalog["files"]:
         lpath = entry.get("local_path", "")
         fname = entry.get("filename", "")
 
-        # Пробуем найти файл: сначала по local_path, потом по имени в files_cache
         abs_lpath = ""
         if lpath:
             candidate = lpath if os.path.isabs(lpath) else os.path.join(BASE_DIR, lpath)
@@ -1022,7 +1180,6 @@ def files_sync():
                 abs_lpath = candidate
 
         if abs_lpath:
-            # Нормализуем local_path — всегда относительный с прямым слешем
             entry["local_path"] = "files_cache/" + os.path.basename(abs_lpath)
             entry["downloaded"]  = True
             entry["size_bytes"]  = os.path.getsize(abs_lpath)

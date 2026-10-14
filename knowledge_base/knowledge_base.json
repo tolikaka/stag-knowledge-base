@@ -167,6 +167,25 @@
       "created_at": "2026-10-07T13:20:28.204958+00:00",
       "updated_at": "2026-10-07T13:20:28.204958+00:00",
       "usage_count": 0
+    },
+    {
+      "id": "kb_2ba11255",
+      "category": "Коды ошибок",
+      "question": "что такое ошибка P0300?",
+      "keywords": [],
+      "answer": "Ошибка **P0300** означает **многократное пропускание зажигания** (Random/Multiple Cylinder Misfire Detected).\r\n\r\nЭто общий код OBD-II, который указывает на то, что блок управления двигателем (ЭБУ) зафиксировал пропуски зажигания в нескольких цилиндрах или в случайном порядке, а не в одном конкретном цилиндре.\r\n\r\n### Что это значит на практике:\r\n1.  **Причина не локализована:** В отличие от P0301–P0308 (где указан конкретный цилиндр), P0300 говорит о том, что проблема носит системный характер или затрагивает сразу несколько цилиндров.\r\n2.  **Частые причины:**\r\n    *   Износ или неисправность свечей зажигания (одновременно в нескольких цилиндрах).\r\n    *   Неисправность катушек зажигания.\r\n    *   Проблемы с топливной системой (низкое давление топлива, засоренные форсунки, неисправный топливный насос).\r\n    *   Нарушение герметичности впускного коллектора (подсос воздуха).\r\n    *   Низкая компрессия в цилиндрах.\r\n    *   Неисправность датчиков (например, датчик положения коленвала, датчик массового расхода воздуха).\r\n    *   Проблемы с проводкой или разъемами системы зажигания.\r\n\r\n### Что делать:\r\n1.  **Проверьте данные потока (Data Stream):** Посмотрите, в каких именно цилиндрах происходят пропуски. Даже если код P0300, ЭБУ часто хранит данные по каждому цилиндру.\r\n2.  **Визуальный осмотр:** Проверьте состояние свечей, катушек, высоковольтных проводов (если есть), целостность проводки.\r\n3.  **Проверка топлива:** Убедитесь, что давление топлива в норме.\r\n4.  **Проверка компрессии:** Если другие проверки не дали результата, проверьте компрессию в цилиндрах.\r\n\r\n⚠️ **Важно:** Длительная эксплуатация с пропусками зажигания может привести к повреждению катализатора. Рекомендуется устранить неисправность как можно скорее.\r\n\r\nЕсли вы хотите более точную диагностику, укажите:\r\n1. Марку, модель, год выпуска и объем двигателя автомобиля.\r\n2. Есть ли другие коды ошибок?\r\n3. Как проявляется неисправность (троит, плавают обороты, падает мощность)?",
+      "source": "learning",
+      "scope": "auto",
+      "created_at": "2026-10-14T20:03:36.155829+00:00",
+      "updated_at": "2026-10-14T20:03:36.164327+00:00",
+      "usage_count": 4,
+      "lang": "ru",
+      "feedback_stats": {
+        "thanks": 0,
+        "clarify": 0,
+        "wrong": 0,
+        "admin_wrong": 2
+      }
     }
   ],
   "categories": [
@@ -381,10 +400,10 @@
       "message_text": "что такое ошибка P0300?",
       "chat_id": -1004368283151,
       "timestamp": "2026-10-07T17:13:06.172522+00:00",
-      "status": "new",
+      "status": "added",
       "lang": "ru",
-      "source_action": "sat_clarify",
-      "source_role": "admin",
+      "source_action": "auto",
+      "source_role": "system",
       "ai_answer": "Ошибка **P0300** означает **многократное пропускание зажигания** (Random/Multiple Cylinder Misfire Detected).\n\nЭто общий код OBD-II, который указывает на то, что блок управления двигателем (ЭБУ) зафиксировал пропуски зажигания в нескольких цилиндрах или в случайном порядке, а не в одном конкретном цилиндре.\n\n### Что это значит на практике:\n1.  **Причина не локализована:** В отличие от P0301–P0308 (где указан конкретный цилиндр), P0300 говорит о том, что проблема носит системный характер или затрагивает сразу несколько цилиндров.\n2.  **Частые причины:**\n    *   Износ или неисправность свечей зажигания (одновременно в нескольких цилиндрах).\n    *   Неисправность катушек зажигания.\n    *   Проблемы с топливной системой (низкое давление топлива, засоренные форсунки, неисправный топливный насос).\n    *   Нарушение герметичности впускного коллектора (подсос воздуха).\n    *   Низкая компрессия в цилиндрах.\n    *   Неисправность датчиков (например, датчик положения коленвала, датчик массового расхода воздуха).\n    *   Проблемы с проводкой или разъемами системы зажигания.\n\n### Что делать:\n1.  **Проверьте данные потока (Data Stream):** Посмотрите, в каких именно цилиндрах происходят пропуски. Даже если код P0300, ЭБУ часто хранит данные по каждому цилиндру.\n2.  **Визуальный осмотр:** Проверьте состояние свечей, катушек, высоковольтных проводов (если есть), целостность проводки.\n3.  **Проверка топлива:** Убедитесь, что давление топлива в норме.\n4.  **Проверка компрессии:** Если другие проверки не дали результата, проверьте компрессию в цилиндрах.\n\n⚠️ **Важно:** Длительная эксплуатация с пропусками зажигания может привести к повреждению катализатора. Рекомендуется устранить неисправность как можно скорее.\n\nЕсли вы хотите более точную диагностику, укажите:\n1. Марку, модель, год выпуска и объем двигателя автомобиля.\n2. Есть ли другие коды ошибок?\n3. Как проявляется неисправность (троит, плавают обороты, падает мощность)?",
       "ai_answer2": "",
       "file_id": ""
@@ -416,6 +435,21 @@
       "source_action": "",
       "source_role": "",
       "ai_answer": "The **STAG 400** is a 4th generation sequential gas injection system manufactured by **AC STAG**, a leading Polish producer of automotive LPG (Liquefied Petroleum Gas) equipment.\n\n### Key Features:\n*   **Generation:** 4th Generation (Liquid phase injection).\n*   **Configuration:** Sequential injection (injectors fire in sync with the engine's ignition order).\n*   **Components:**\n    *   **ECU (Electronic Control Unit):** Manages gas injection based on engine parameters (RPM, load, temperature, etc.).\n    *   **Injectors:** Typically 4 or 6 injectors (depending on engine cylinders), usually made of stainless steel or aluminum with ceramic nozzles.\n    *   **Vaporizer:** Heats the liquid LPG to convert it into gas.\n    *   **Pressure Regulator:** Reduces pressure from the cylinder to the level required by the vaporizer.\n    *   **Gas Train:** Includes the main valve, filter, and hoses.\n    *   **Tank:** LPG cylinder (not part of the STAG 400 kit itself, but required for operation).\n    *   **Switch:** For switching between petrol and gas.\n\n### Compatibility:\n*   Designed for **4-cylinder** and **6-cylinder** petrol engines.\n*   Works with both **port-fuel injected** (MPI) and some **direct-injection** engines (with additional hardware like a gas manifold or rail, depending on the specific engine and installation method).\n*   Compatible with most modern OBD-II vehicles.\n\n### Advantages:\n*   **Cost-Effective:** LPG is significantly cheaper than petrol in most regions.\n*   **Eco-Friendly:** Lower CO2 and particulate emissions compared to petrol.\n*   **Reliability:** AC STAG is known for robust, long-lasting components.\n*   **Performance:** Maintains original engine power and torque when properly tuned.\n\n### Important Notes for Technicians:\n1.  **Calibration:** Proper calibration of the gas map (using a diagnostic tool like STAG Diagnostics or compatible OBD software) is critical for optimal performance and fuel economy.\n2.  **Leak Check:** Always perform a leak test (with soapy water or electronic detector) after installation.\n3.  **Safety:** Ensure all connections are tight and hoses are not damaged. LPG is highly flammable.\n4.  **Engine Compatibility:** Verify that the engine is suitable for LPG conversion (e.g., valve seat material, injector type, engine management system).\n\nIf you are installing or diagnosing a STAG 400 system, ensure you have the correct **injector type** (e.g., standard, high-flow, or for direct injection) and that the **ECU firmware** is up to date for the specific engine.",
+      "ai_answer2": "",
+      "file_id": ""
+    },
+    {
+      "id": "pend_542d39d0",
+      "user_id": 39425955,
+      "username": "AnatoliyAndrianov",
+      "message_text": "что такое дифференциал?",
+      "chat_id": -1004368283151,
+      "timestamp": "2026-10-14T20:09:42.301613+00:00",
+      "status": "new",
+      "lang": "ru",
+      "source_action": "auto",
+      "source_role": "system",
+      "ai_answer": "Дифференциал — это узел трансмиссии автомобиля, который позволяет колёсам на одной оси вращаться с разной скоростью.\n\n**Зачем он нужен:**\nПри повороте внутреннее колесо проходит меньший путь, чем внешнее. Если бы колёса были жёстко связаны, одно из них буксовало бы, что вело бы к быстрому износу шин и нагрузкам на трансмиссию. Дифференциал компенсирует эту разницу, передавая крутящий момент на оба колеса, позволяя им вращаться с разной угловой скоростью.\n\n**Основные типы:**\n1.  **Открытый (стандартный):** Самый распространённый. При пробуксовке одного колеса крутящий момент в основном уходит на это колесо, так как оно вращается легче.\n2.  **Самоблокирующийся (LSD):** Ограничивает разницу в скорости вращения колёс, улучшая тягу и управляемость.\n3.  **Полностью блокируемый:** Жёстко связывает колёса, исключая разницу в скорости (используется в грузовиках и внедорожниках).\n\n**Типичные признаки неисправности:**\n*   Гул или вой, усиливающийся при повороте или разгоне.\n*   Шум при движении прямо.\n*   Подтекание масла из сальников полуосей.\n*   Стук или люфт при движении.\n\nЕсли вы слышите посторонние звуки из-под автомобиля, рекомендуется проверить уровень и состояние масла в картере дифференциала, а также состояние сальников и шестерён.",
       "ai_answer2": "",
       "file_id": ""
     }
